@@ -5,12 +5,19 @@ import TaskModal from './TaskModal';
 import { truncateText, getDaysInMonth, getWeekDays, priorityColors, availableColors } from '../utils';
 
 const DevTaskManager = () => {
+    // Helper to normalize tags (can be string or array)
+    const normalizeTags = (tags) => {
+        if (Array.isArray(tags)) return tags;
+        if (typeof tags === 'string' && tags.length > 0) return tags.split(/\s+/).filter(Boolean);
+        return [];
+    };
+
     const defaultTasks = [
-        { id: '1', title: 'Implementare autenticazione', column: 'todo', date: '2025-11-13', time: '09:00', deadline: '2025-11-20', priority: 'high', tags: ['backend', 'security'], description: 'Implementare sistema di autenticazione JWT con refresh token', order: 0 },
-        { id: '2', title: 'Refactoring componenti UI', column: 'inProgress', date: '2025-11-12', time: '14:30', deadline: '2025-11-18', priority: 'medium', tags: ['frontend', 'refactor'], description: 'Refactoring dei componenti React per migliorare la manutenibilità', order: 0 },
-        { id: '3', title: 'Code review PR #234', column: 'inProgress', date: '2025-11-12', time: '10:00', deadline: '2025-11-13', priority: 'high', tags: ['review'], description: 'Revisione pull request per nuova feature', order: 1 },
-        { id: '4', title: 'Fix bug login iOS', column: 'done', date: '2025-11-10', time: '11:00', deadline: '2025-11-12', priority: 'high', tags: ['bug', 'mobile'], description: 'Risolto problema con il login su dispositivi iOS', order: 0 },
-        { id: '5', title: 'Ottimizzare query database', column: 'todo', date: '2025-11-15', time: '15:00', deadline: '2025-11-25', priority: 'medium', tags: ['backend', 'performance'], description: 'Analisi e ottimizzazione delle query più lente', order: 1 },
+        { id: '1', title: 'Implementare autenticazione', column: 'todo', date: '2025-11-13', time: '09:00', deadline: '2025-11-20', deadline_time: '17:00', priority: 'high', tags: ['backend', 'security'], description: 'Implementare sistema di autenticazione JWT con refresh token', order: 0 },
+        { id: '2', title: 'Refactoring componenti UI', column: 'inProgress', date: '2025-11-12', time: '14:30', deadline: '2025-11-18', deadline_time: '18:00', priority: 'medium', tags: ['frontend', 'refactor'], description: 'Refactoring dei componenti React per migliorare la manutenibilità', order: 0 },
+        { id: '3', title: 'Code review PR #234', column: 'inProgress', date: '2025-11-12', time: '10:00', deadline: '2025-11-13', deadline_time: '16:00', priority: 'high', tags: ['review'], description: 'Revisione pull request per nuova feature', order: 1 },
+        { id: '4', title: 'Fix bug login iOS', column: 'done', date: '2025-11-10', time: '11:00', deadline: '2025-11-12', deadline_time: '15:00', priority: 'high', tags: ['bug', 'mobile'], description: 'Risolto problema con il login su dispositivi iOS', order: 0 },
+        { id: '5', title: 'Ottimizzare query database', column: 'todo', date: '2025-11-15', time: '15:00', deadline: '2025-11-25', deadline_time: '17:00', priority: 'medium', tags: ['backend', 'performance'], description: 'Analisi e ottimizzazione delle query più lente', order: 1 },
     ];
 
     const loadFromStorage = () => {
@@ -29,7 +36,7 @@ const DevTaskManager = () => {
     const [draggedTask, setDraggedTask] = useState(null);
     const [draggedColumn, setDraggedColumn] = useState(null);
     const [newTaskColumn, setNewTaskColumn] = useState(null);
-    const [newTaskForm, setNewTaskForm] = useState({ title: '', date: '', time: '', deadline: '', priority: 'medium', tags: '', description: '' });
+    const [newTaskForm, setNewTaskForm] = useState({ title: '', date: '', time: '', deadline: '', deadline_time: '', priority: 'medium', tags: '', description: '' });
     const [editingTask, setEditingTask] = useState(null);
     const [viewingTask, setViewingTask] = useState(null);
     const [editingColumn, setEditingColumn] = useState(null);
@@ -151,6 +158,7 @@ const DevTaskManager = () => {
                 date: newTaskForm.date || new Date().toISOString().split('T')[0],
                 time: newTaskForm.time || '09:00',
                 deadline: newTaskForm.deadline || '',
+                deadline_time: newTaskForm.deadline_time || '',
                 priority: newTaskForm.priority,
                 tags: newTaskForm.tags.split(',').map(t => t.trim()).filter(t => t),
                 description: newTaskForm.description || '',
@@ -159,7 +167,7 @@ const DevTaskManager = () => {
             const newTasks = [...tasks, newTask];
             setTasks(newTasks);
             pushSnapshot(newTasks, columnsState);
-            setNewTaskForm({ title: '', date: '', time: '', deadline: '', priority: 'medium', tags: '', description: '' });
+            setNewTaskForm({ title: '', date: '', time: '', deadline: '', deadline_time: '', priority: 'medium', tags: '', description: '' });
             setNewTaskColumn(null);
         }
     };
@@ -405,7 +413,7 @@ const DevTaskManager = () => {
                                 <button
                                     onClick={() => setNewTaskColumn(column.id)}
                                     className="p-1 hover:bg-white/50 rounded transition-colors"
-                                    title="Aggiungi task"
+                                    title="Add task"
                                 >
                                     <Plus className="w-5 h-5" />
                                 </button>
@@ -413,7 +421,7 @@ const DevTaskManager = () => {
                                     <button
                                         onClick={() => setOpenColumnMenu(openColumnMenu === column.id ? null : column.id)}
                                         className="p-1 hover:bg-white/50 rounded transition-colors"
-                                        title="Menu colonna"
+                                        title="Column menu"
                                     >
                                         <MoreVertical className="w-5 h-5" />
                                     </button>
@@ -427,7 +435,7 @@ const DevTaskManager = () => {
                                                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
                                             >
                                                 <span className={columnSortBy[column.id] === 'priority' ? 'text-blue-600 font-medium' : ''}>
-                                                    {columnSortBy[column.id] === 'priority' ? '✓ ' : ''}Ordina per priorità
+                                                    {columnSortBy[column.id] === 'priority' ? '✓ ' : ''}Sort by priority
                                                 </span>
                                             </button>
                                             <button
@@ -439,11 +447,11 @@ const DevTaskManager = () => {
                                             >
                                                 <Check className="w-4 h-4" />
                                                 <span className={column.isDone ? 'text-blue-600 font-medium' : ''}>
-                                                    {column.isDone ? '✓ ' : ''}Colonna completati
+                                                    {column.isDone ? '✓ ' : ''}Completed column
                                                 </span>
                                             </button>
                                             <div className="px-4 py-2">
-                                                <div className="text-xs text-gray-600 mb-2">Colore colonna:</div>
+                                                <div className="text-xs text-gray-600 mb-2">Column color:</div>
                                                 <div className="grid grid-cols-5 gap-1">
                                                     {availableColors.map(color => (
                                                         <button
@@ -463,14 +471,14 @@ const DevTaskManager = () => {
                                                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
                                             >
                                                 <ChevronLeftSquare className="w-4 h-4" />
-                                                Aggiungi a sinistra
+                                                Add on left
                                             </button>
                                             <button
                                                 onClick={() => addColumnAtPosition(column.id, 'right')}
                                                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
                                             >
                                                 <ChevronRightSquare className="w-4 h-4" />
-                                                Aggiungi a destra
+                                                Add on right
                                             </button>
                                             {columnsState.length > 1 && (
                                                 <>
@@ -483,7 +491,7 @@ const DevTaskManager = () => {
                                                         className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
                                                     >
                                                         <X className="w-4 h-4" />
-                                                        Elimina colonna
+                                                        Delete column
                                                     </button>
                                                 </>
                                             )}
@@ -496,74 +504,46 @@ const DevTaskManager = () => {
 
                     {newTaskColumn === column.id && (
                         <div className="bg-white rounded-lg p-3 mb-3 shadow-sm">
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Titolo</label>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
                             <input
                                 type="text"
-                                placeholder="Titolo task..."
+                                placeholder="Task title..."
                                 className="w-full p-2 border rounded mb-2 text-sm"
                                 value={newTaskForm.title}
                                 onChange={(e) => setNewTaskForm({ ...newTaskForm, title: e.target.value })}
                                 autoFocus
-                            />
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Data</label>
-                            <input
-                                type="date"
-                                className="w-full p-2 border rounded mb-2 text-sm"
-                                value={newTaskForm.date}
-                                onChange={(e) => setNewTaskForm({ ...newTaskForm, date: e.target.value })}
-                            />
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Ora</label>
-                            <input
-                                type="time"
-                                className="w-full p-2 border rounded mb-2 text-sm"
-                                value={newTaskForm.time}
-                                onChange={(e) => setNewTaskForm({ ...newTaskForm, time: e.target.value })}
-                            />
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Scadenza</label>
-                            <input
-                                type="date"
-                                className="w-full p-2 border rounded mb-2 text-sm"
-                                value={newTaskForm.deadline}
-                                onChange={(e) => setNewTaskForm({ ...newTaskForm, deadline: e.target.value })}
-                            />
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Priorità</label>
-                            <select
-                                className="w-full p-2 border rounded mb-2 text-sm"
-                                value={newTaskForm.priority}
-                                onChange={(e) => setNewTaskForm({ ...newTaskForm, priority: e.target.value })}
-                            >
-                                <option value="low">Bassa priorità</option>
-                                <option value="medium">Media priorità</option>
-                                <option value="high">Alta priorità</option>
-                            </select>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Tags</label>
-                            <input
-                                type="text"
-                                placeholder="Tags (separati da virgola)"
-                                className="w-full p-2 border rounded mb-2 text-sm"
-                                value={newTaskForm.tags}
-                                onChange={(e) => setNewTaskForm({ ...newTaskForm, tags: e.target.value })}
-                            />
-                            <label className="block text-xs font-medium text-gray-700 mb-1">Descrizione</label>
-                            <textarea
-                                placeholder="Descrizione dettagliata..."
-                                className="w-full p-2 border rounded mb-2 text-sm resize-none"
-                                rows={3}
-                                value={newTaskForm.description}
-                                onChange={(e) => setNewTaskForm({ ...newTaskForm, description: e.target.value })}
+                                required
                             />
                             <div className="flex gap-2">
                                 <button
-                                    onClick={() => addTask(column.id)}
+                                    onClick={() => {
+                                        if (newTaskForm.title.trim()) {
+                                            const newTask = {
+                                                id: Date.now().toString(),
+                                                title: newTaskForm.title,
+                                                column: column.id,
+                                                date: new Date().toISOString().split('T')[0],
+                                                time: '09:00',
+                                                deadline: '',
+                                                deadline_time: '',
+                                                priority: 'medium',
+                                                tags: '',
+                                                description: '',
+                                                order: 0
+                                            };
+                                            setViewingTask(newTask);
+                                            setNewTaskColumn(null);
+                                        }
+                                    }}
                                     className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors"
                                 >
-                                    Aggiungi
+                                    Continue
                                 </button>
                                 <button
                                     onClick={() => setNewTaskColumn(null)}
                                     className="px-3 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300 transition-colors"
                                 >
-                                    Annulla
+                                    Cancel
                                 </button>
                             </div>
                         </div>
@@ -575,42 +555,51 @@ const DevTaskManager = () => {
                                 <div
                                     draggable
                                     onDragStart={() => handleDragStart(task)}
-                                    className={`bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow ${priorityColors[task.priority]}`}
+                                    className={`bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${priorityColors[task.priority]}`}
+                                    onClick={() => setViewingTask(task)}
                                 >
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex items-start gap-2 flex-1">
                                             <GripVertical className="w-4 h-4 text-gray-400 mt-1 shrink-0 cursor-move" />
-                                            <p className="text-sm font-medium text-gray-800 truncate max-w-[200px]">{truncateText(task.title, 60)}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900 truncate">{truncateText(task.title, 50)}</p>
+                                            </div>
                                         </div>
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={() => setViewingTask(task)}
-                                                className="text-gray-400 hover:text-blue-500 transition-colors"
-                                                title="Visualizza dettagli"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    deleteTask(task.id);
-                                                }}
-                                                className="text-gray-400 hover:text-red-500 transition-colors"
-                                            >
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteTask(task.id);
+                                            }}
+                                            className="text-gray-400 hover:text-red-500 transition-colors ml-2 shrink-0"
+                                            title="Delete task"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                    <div className="flex flex-wrap gap-1 mb-2">
-                                        {task.tags.map((tag, i) => (
-                                            <span key={i} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                                {tag}
-                                            </span>
-                                        ))}
+
+                                    {task.description && (
+                                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">{task.description}</p>
+                                    )}
+
+                                    <div className="mb-2">
+                                        <span className="text-xs font-medium text-gray-700 capitalize">Priority: </span>
+                                        <span className="text-xs text-gray-600 capitalize">{task.priority}</span>
                                     </div>
-                                    <p className="text-xs text-gray-500">{task.time} - {new Date(task.date).toLocaleDateString('it-IT')}</p>
+
                                     {task.deadline && (
-                                        <p className="text-xs text-red-600 mt-1">Scadenza: {new Date(task.deadline).toLocaleDateString('it-IT')}</p>
+                                        <div className="mb-2 text-xs font-medium">
+                                            <span className="text-red-600">Deadline: {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {task.deadline_time && `@ ${task.deadline_time}`}</span>
+                                        </div>
+                                    )}
+
+                                    {normalizeTags(task.tags).length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {normalizeTags(task.tags).map((tag, i) => (
+                                                <span key={i} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                                    #{tag}
+                                                </span>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -635,12 +624,12 @@ const DevTaskManager = () => {
                         </button>
                         <div className="text-center">
                             <h3 className="font-bold text-lg">
-                                {currentDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                                {currentDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                             </h3>
                             <div className="flex gap-2 mt-2">
-                                <button onClick={() => setCalendarView('month')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Mese</button>
-                                <button onClick={() => setCalendarView('week')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Settimana</button>
-                                <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Giorno</button>
+                                <button onClick={() => setCalendarView('month')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Month</button>
+                                <button onClick={() => setCalendarView('week')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Week</button>
+                                <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Day</button>
                             </div>
                         </div>
                         <button onClick={() => changeDay(1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
@@ -696,12 +685,12 @@ const DevTaskManager = () => {
                         </button>
                         <div className="text-center">
                             <h3 className="font-bold text-lg">
-                                Settimana - {currentDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+                                Week - {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                             </h3>
                             <div className="flex gap-2 mt-2">
-                                <button onClick={() => setCalendarView('month')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Mese</button>
-                                <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Settimana</button>
-                                <button onClick={() => setCalendarView('day')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Giorno</button>
+                                <button onClick={() => setCalendarView('month')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Month</button>
+                                <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Week</button>
+                                <button onClick={() => setCalendarView('day')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Day</button>
                             </div>
                         </div>
                         <button onClick={() => changeWeek(1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
@@ -720,7 +709,7 @@ const DevTaskManager = () => {
                                 return (
                                     <div key={dateStr} className={`border rounded-lg p-2 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
                                         <div className={`text-sm font-semibold mb-2 text-center ${isToday ? 'text-blue-600' : 'text-gray-600'}`}>
-                                            {day.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' })}
+                                            {day.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
                                         </div>
                                         <div className="bg-white rounded overflow-auto max-h-[60vh]">
                                             {hours.map(hour => {
@@ -764,7 +753,7 @@ const DevTaskManager = () => {
 
         const { daysInMonth, startingDayOfWeek, year, month } = getDaysInMonth(currentDate);
         const days = [];
-        const weekDays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+        const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
         for (let i = 0; i < startingDayOfWeek; i++) {
             days.push(<div key={`empty-${i}`} className="min-h-[100px] bg-gray-50 rounded"></div>);
@@ -809,12 +798,12 @@ const DevTaskManager = () => {
                     </button>
                     <div className="text-center">
                         <h3 className="font-bold text-lg">
-                            {currentDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}
+                            {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                         </h3>
                         <div className="flex gap-2 mt-2">
-                            <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Mese</button>
-                            <button onClick={() => setCalendarView('week')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Settimana</button>
-                            <button onClick={() => setCalendarView('day')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Giorno</button>
+                            <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Month</button>
+                            <button onClick={() => setCalendarView('week')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Week</button>
+                            <button onClick={() => setCalendarView('day')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Day</button>
                         </div>
                     </div>
                     <button onClick={() => changeMonth(1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
@@ -884,9 +873,17 @@ const DevTaskManager = () => {
                 viewingTask={viewingTask}
                 setViewingTask={setViewingTask}
                 onSave={(updated) => {
-                    const newTasks = tasks.map(t => t.id === updated.id ? { ...updated } : t);
-                    setTasks(newTasks);
-                    pushSnapshot(newTasks, columnsState);
+                    if (updated.id.includes('Date.now')) {
+                        // Nuovo task creato dal Kanban
+                        const newTasks = [...tasks, updated];
+                        setTasks(newTasks);
+                        pushSnapshot(newTasks, columnsState);
+                    } else {
+                        // Task esistente
+                        const newTasks = tasks.map(t => t.id === updated.id ? { ...updated } : t);
+                        setTasks(newTasks);
+                        pushSnapshot(newTasks, columnsState);
+                    }
                 }}
                 onDelete={(id) => {
                     deleteTask(id);

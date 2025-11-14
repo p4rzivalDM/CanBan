@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Field, FieldLabel } from './ui/field';
+import TagInput from './ui/tags';
+import { Trash } from 'lucide-react';
+import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from './ui/select';
 
 const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
     const [editingForm, setEditingForm] = useState(viewingTask || null);
@@ -15,6 +22,10 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
     };
 
     const handleSave = () => {
+        if (!editingForm?.title?.trim()) {
+            alert('Title is required');
+            return;
+        }
         onSave(editingForm);
         setViewingTask(null);
     };
@@ -24,22 +35,98 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent/50">
             <div className="w-[90%] max-w-2xl bg-white rounded-lg p-6 shadow-lg">
-                <h2 className="text-xl font-semibold mb-3">Modifica Task</h2>
-                <div className="grid grid-cols-1 gap-3">
-                    <input className="border p-2 rounded" value={editingForm.title || ''} onChange={handleChange('title')} />
-                    <textarea className="border p-2 rounded" value={editingForm.description || ''} onChange={handleChange('description')} />
-                    <div className="flex gap-2">
-                        <input className="border p-2 rounded" value={editingForm.date || ''} onChange={handleChange('date')} type="date" />
-                        <input className="border p-2 rounded" value={editingForm.time || ''} onChange={handleChange('time')} type="time" />
+                <form>
+                    <h2 className="text-xl font-semibold mb-3">Edit task</h2>
+                    <div className="grid grid-cols-1 gap-3">
+                        <Field>
+                            <FieldLabel htmlFor="title">Title</FieldLabel>
+                            <Input
+                                id="title"
+                                placeholder="Enter task title"
+                                value={editingForm?.title || ''}
+                                onChange={handleChange('title')}
+                                required
+                            />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="description">Description</FieldLabel>
+                            <Textarea
+                                id="description"
+                                placeholder="Enter task description"
+                                rows={4}
+                                value={editingForm?.description || ''}
+                                onChange={handleChange('description')}
+                            />
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="priority">Priority</FieldLabel>
+                            <Select>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue
+                                        id="priority"
+                                        placeholder="Select priority"
+                                        defaultValue={editingForm?.priority || 'normal'}
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="very-high">Very High</SelectItem>
+                                    <SelectItem value="high">High</SelectItem>
+                                    <SelectItem value="normal">Normal</SelectItem>
+                                    <SelectItem value="low">Low</SelectItem>
+                                    <SelectItem value="very-low">Very Low</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="deadline">Deadline</FieldLabel>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="deadline"
+                                    placeholder="Select date"
+                                    type="date"
+                                    value={editingForm?.deadline || ''}
+                                    onChange={handleChange('deadline')}
+                                />
+                                <Input
+                                    id="deadline-time"
+                                    placeholder="Select time"
+                                    type="time"
+                                    value={editingForm?.deadline_time || ''}
+                                    onChange={(e) => setEditingForm(prev => ({ ...prev, deadline_time: e.target.value }))}
+                                />
+                            </div>
+                        </Field>
+                        <Field>
+                            <FieldLabel htmlFor="tags">Tags</FieldLabel>
+                            <TagInput
+                                id="tags"
+                                value={editingForm?.tags || ''}
+                                onChange={(v) => setEditingForm(prev => ({ ...prev, tags: v }))}
+                                placeholder="Add tags"
+                            />
+                        </Field>
                     </div>
-                </div>
-                <div className="mt-4 flex justify-end gap-2">
-                    <button className="px-4 py-2 bg-gray-200 rounded" onClick={handleCancel}>Annulla</button>
-                    <button className="px-4 py-2 bg-red-500 text-white rounded" onClick={() => { onDelete(viewingTask.id); setViewingTask(null); }}>Elimina</button>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={handleSave}>Salva Modifiche</button>
-                </div>
+                    <div className="mt-4 flex justify-between gap-2">
+                        <div className="mt-4 flex justify-start gap-2">
+                            <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => {
+                                    onDelete(viewingTask.id);
+                                    setViewingTask(null);
+                                }}
+                            >
+                                <Trash />
+                            </Button>
+                        </div>
+                        <div className="mt-4 flex justify-end gap-2">
+                            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                            <Button variant="default" onClick={handleSave}>Save</Button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     );

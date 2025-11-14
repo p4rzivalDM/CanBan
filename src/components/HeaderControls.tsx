@@ -1,67 +1,86 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { Button } from './ui/button';
+import { Columns2, Download, FolderOpen, Redo, Undo } from 'lucide-react';
 
 const HeaderControls = ({ viewMode, setViewMode, exportData, importData, undo, redo, historyState }) => {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        importData(e);
+        // Reset input so the same file can be imported again
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
     return (
         <div className="mb-6 flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
             <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-800">Dev Task Manager</h1>
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded flex items-center gap-1">
-                    <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                    Salvataggio automatico attivo
-                </span>
+                
             </div>
             <div className="flex gap-2">
-                <button
+                <Button
                     onClick={() => setViewMode('kanban')}
-                    className={`px-4 py-2 rounded transition-colors ${viewMode === 'kanban' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    variant={viewMode === 'kanban' ? 'default' : 'outline'}
                 >
                     Kanban
-                </button>
-                <button
+                </Button>
+                <Button
                     onClick={() => setViewMode('calendar')}
-                    className={`px-4 py-2 rounded transition-colors ${viewMode === 'calendar' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    variant={viewMode === 'calendar' ? 'default' : 'outline'}
                 >
-                    Calendario
-                </button>
-                <button
+                    Calendar
+                </Button>
+                <Button
                     onClick={() => setViewMode('both')}
-                    className={`px-4 py-2 rounded transition-colors ${viewMode === 'both' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    variant={viewMode === 'both' ? 'default' : 'outline'}
+                    title="Split view"
                 >
-                    Entrambi
-                </button>
-                <div className="border-l border-gray-300 mx-2"></div>
-                <button
+                    <Columns2 />
+                </Button>
+                <div className="border-l border-slate-300 mx-2"></div>
+                <Button
                     onClick={undo}
                     disabled={historyState.index <= 0}
-                    className={`px-3 py-2 rounded text-sm ${historyState.index <= 0 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                    title="Annulla (Undo)"
+                    variant={historyState.index <= 0 ? 'outline' : 'default'}
+                    title="Undo"
                 >
-                    ↶ Annulla
-                </button>
-                <button
+                    <Undo /> Undo
+                </Button>
+                <Button
                     onClick={redo}
                     disabled={historyState.index >= historyState.length - 1}
-                    className={`px-3 py-2 rounded text-sm ${historyState.index >= historyState.length - 1 ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                    title="Ripristina (Redo)"
+                    variant={historyState.index >= historyState.length - 1 ? 'outline' : 'default'}
+                    title="Redo"
                 >
-                    ↷ Ripristina
-                </button>
-                <button
+                    <Redo /> Redo
+                </Button>
+                <div className="border-l border-slate-300 mx-2"></div>
+                <Button
                     onClick={exportData}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
-                    title="Esporta dati in JSON"
+                    variant={'outline'}
+                    title="Export data as JSON"
                 >
-                    💾 Esporta
-                </button>
-                <label className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm cursor-pointer">
-                    📂 Importa
-                    <input
-                        type="file"
-                        accept=".json"
-                        onChange={importData}
-                        className="hidden"
-                    />
-                </label>
+                    <Download /> Export
+                </Button>
+                <Button
+                    onClick={handleImportClick}
+                    variant={'outline'}
+                    title="Import data from JSON file"
+                >
+                    <FolderOpen /> Import
+                </Button>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
             </div>
         </div>
     );
