@@ -80,6 +80,25 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                             </Select>
                         </Field>
                         <Field>
+                            <FieldLabel htmlFor="date">Scheduled</FieldLabel>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="date"
+                                    placeholder="Select date"
+                                    type="date"
+                                    value={editingForm?.date || ''}
+                                    onChange={handleChange('date')}
+                                />
+                                <Input
+                                    id="time"
+                                    placeholder="Select time"
+                                    type="time"
+                                    value={editingForm?.time || ''}
+                                    onChange={(e) => setEditingForm(prev => ({ ...prev, time: e.target.value }))}
+                                />
+                            </div>
+                        </Field>
+                        <Field>
                             <FieldLabel htmlFor="deadline">Deadline</FieldLabel>
                             <div className="flex gap-2">
                                 <Input
