@@ -125,7 +125,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
                                             >
                                                 <span className={columnSortBy[column.id] === 'priority' ? 'text-blue-600 font-medium' : ''}>
-                                                    {columnSortBy[column.id] === 'priority' ? '✓ ' : ''}Sort by priority
+                                                    <span className="flex gap-2">{columnSortBy[column.id] === 'priority' ? <Check className="w-4 h-4" /> : ''}Sort by priority</span>
                                                 </span>
                                             </button>
                                             <button
@@ -135,9 +135,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                                 }}
                                                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
                                             >
-                                                <Check className="w-4 h-4" />
                                                 <span className={column.isDone ? 'text-blue-600 font-medium' : ''}>
-                                                    {column.isDone ? '✓ ' : ''}Completed column
+                                                    <span className="flex gap-2">{column.isDone ? <Check className="w-4 h-4" />  : ''}Mark card as completed</span>
                                                 </span>
                                             </button>
                                             <div className="px-4 py-2">

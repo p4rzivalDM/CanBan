@@ -1,6 +1,7 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, UndoDot } from 'lucide-react';
 import { truncateText, getDaysInMonth, getWeekDays, priorityColors } from '../utils';
+import { Button } from './ui/button';
 
 interface CalendarViewProps {
     tasks: any[];
@@ -11,6 +12,7 @@ interface CalendarViewProps {
     onChangeWeek: (delta: number) => void;
     onChangeMonth: (delta: number) => void;
     onSetCalendarView: (view: 'day' | 'week' | 'month') => void;
+    onToday?: () => void;
     onViewTask: (task: any) => void;
 }
 
@@ -23,35 +25,97 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     onChangeWeek,
     onChangeMonth,
     onSetCalendarView,
+    onToday,
     onViewTask
 }) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Precompute weekDays when needed and whether the currently shown period contains today
+    const weekDaysForView = calendarView === 'week' ? getWeekDays(currentDate) : null;
+    let containsToday = false;
+    if (calendarView === 'month') {
+        const today = new Date();
+        containsToday = currentDate.getFullYear() === today.getFullYear() && currentDate.getMonth() === today.getMonth();
+    } else if (calendarView === 'week') {
+        containsToday = !!weekDaysForView?.some(d => d.toISOString().split('T')[0] === todayStr);
+    } else {
+        containsToday = currentDate.toISOString().split('T')[0] === todayStr;
+    }
+
+    const ViewSelector: React.FC<{
+        current: 'day' | 'week' | 'month';
+        onSet: (v: 'day' | 'week' | 'month') => void;
+        showToday?: boolean;
+        onToday?: () => void;
+    }> = ({ current, onSet, showToday, onToday }) => (
+        <div className="flex gap-2 mt-2">
+            <Button
+                onClick={() => onSet('month')}
+                type="button"
+                size="sm"
+                variant={current === 'month' ? 'default' : 'secondary'}
+            >
+                Month
+            </Button>
+            <Button 
+                onClick={() => onSet('week')}
+                type="button"
+                size="sm"
+                variant={current === 'week' ? 'default' : 'secondary'}
+            >
+                Week
+            </Button>
+            <Button 
+                onClick={() => onSet('day')}
+                type="button"
+                size="sm"
+                variant={current === 'day' ? 'default' : 'secondary'}
+            >
+                Day
+            </Button>
+            {showToday && onToday && (
+                <Button onClick={onToday} size="sm" title="Return to Today"><UndoDot /></Button>
+            )}
+        </div>
+    );
+
+    const HeaderBar: React.FC<{
+        title: React.ReactNode;
+        onPrev: () => void;
+        onNext: () => void;
+        onToday?: () => void;
+    }> = ({ title, onPrev, onNext, onToday }) => (
+        <div className="flex items-center justify-between mb-4 bg-white p-4 rounded-lg shadow-sm">
+            <Button onClick={onPrev} size="icon">
+                <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <div className="text-center">
+                <div className="flex items-center justify-center gap-3">
+                    <div className="font-bold text-lg">{title}</div>
+                </div>
+                <ViewSelector current={calendarView} onSet={onSetCalendarView} showToday={!containsToday} onToday={onToday} />
+            </div>
+            <Button onClick={onNext} size="icon">
+                <ChevronRight className="w-5 h-5" />
+            </Button>
+        </div>
+    );
+
     if (calendarView === 'day') {
         const dateStr = currentDate.toISOString().split('T')[0];
+        const isToday = dateStr === todayStr;
         const dayTasks = tasks.filter(t => t.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
         const hours = Array.from({ length: 24 }, (_, i) => i);
 
         return (
             <div className="h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4 bg-white p-4 rounded-lg shadow-sm">
-                    <button onClick={() => onChangeDay(-1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <div className="text-center">
-                        <h3 className="font-bold text-lg">
-                            {currentDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                        </h3>
-                        <div className="flex gap-2 mt-2">
-                            <button onClick={() => onSetCalendarView('month')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Month</button>
-                            <button onClick={() => onSetCalendarView('week')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Week</button>
-                            <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Day</button>
-                        </div>
-                    </div>
-                    <button onClick={() => onChangeDay(1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-auto bg-white rounded-lg shadow-sm">
+                <HeaderBar
+                    title={currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    onPrev={() => onChangeDay(-1)}
+                    onNext={() => onChangeDay(1)}
+                    onToday={onToday}
+                />
+                <div className={`border rounded-lg p-2 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
                     {hours.map(hour => {
                         const hourStr = String(hour).padStart(2, '0');
                         const hourTasks = dayTasks.filter(t => t.time.startsWith(hourStr));
@@ -69,7 +133,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                             <div
                                                 key={task.id}
                                                 onClick={() => onViewTask(task)}
-                                                className={`text-xs p-2 rounded cursor-pointer hover:opacity-80 ${priorityColors[task.priority]} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
+                                                className={`text-xs p-2 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
                                             >
                                                 <div className="font-medium">
                                                     <span className="text-xs mr-1">{task.time} -</span>
@@ -89,35 +153,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
 
     if (calendarView === 'week') {
-        const weekDays = getWeekDays(currentDate);
+        const weekDays = weekDaysForView || getWeekDays(currentDate);
 
         return (
             <div className="h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4 bg-white p-4 rounded-lg shadow-sm">
-                    <button onClick={() => onChangeWeek(-1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <div className="text-center">
-                        <h3 className="font-bold text-lg">
-                            Week - {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                        </h3>
-                        <div className="flex gap-2 mt-2">
-                            <button onClick={() => onSetCalendarView('month')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Month</button>
-                            <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Week</button>
-                            <button onClick={() => onSetCalendarView('day')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Day</button>
-                        </div>
-                    </div>
-                    <button onClick={() => onChangeWeek(1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
-
+                <HeaderBar
+                    title={`${weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                    onPrev={() => onChangeWeek(-1)}
+                    onNext={() => onChangeWeek(1)}
+                    onToday={onToday}
+                />
                 <div className="flex-1 overflow-auto">
                     <div className="grid grid-cols-7 gap-3">
                         {weekDays.map(day => {
                             const dateStr = day.toISOString().split('T')[0];
                             const dayTasks = tasks.filter(t => t.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
-                            const isToday = dateStr === new Date().toISOString().split('T')[0];
+                            const isToday = dateStr === todayStr;
                             const hours = Array.from({ length: 24 }, (_, i) => i);
 
                             return (
@@ -141,7 +192,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                                                 <div
                                                                     key={task.id}
                                                                     onClick={() => onViewTask(task)}
-                                                                    className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${priorityColors[task.priority]} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
+                                                                    className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
                                                                 >
                                                                     <div className="font-medium text-xs">
                                                                         <span className="mr-1">{task.time} -</span>
@@ -177,7 +228,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayTasks = tasks.filter(t => t.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
-        const isToday = dateStr === '2025-11-12';
+        const isToday = dateStr === todayStr;
 
         days.push(
             <div key={day} className={`min-h-[100px] border rounded-lg p-2 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
@@ -192,7 +243,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                             <div
                                 key={task.id}
                                 onClick={() => onViewTask(task)}
-                                className={`text-xs p-1.5 rounded cursor-pointer hover:opacity-80 ${priorityColors[task.priority]} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
+                                className={`text-xs p-1.5 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
                             >
                                 <div className="font-medium text-xs">{task.time}</div>
                                 <div className="font-medium truncate">{truncateText(task.title, 60)}</div>
@@ -207,25 +258,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
     return (
         <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4 bg-white p-4 rounded-lg shadow-sm">
-                <button onClick={() => onChangeMonth(-1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
-                    <ChevronLeft className="w-5 h-5" />
-                </button>
-                <div className="text-center">
-                    <h3 className="font-bold text-lg">
-                        {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    </h3>
-                    <div className="flex gap-2 mt-2">
-                        <button className="px-3 py-1 text-xs bg-blue-600 text-white rounded">Month</button>
-                        <button onClick={() => onSetCalendarView('week')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Week</button>
-                        <button onClick={() => onSetCalendarView('day')} className="px-3 py-1 text-xs bg-gray-200 rounded hover:bg-gray-300">Day</button>
-                    </div>
-                </div>
-                <button onClick={() => onChangeMonth(1)} className="p-2 hover:bg-gray-100 rounded transition-colors">
-                    <ChevronRight className="w-5 h-5" />
-                </button>
-            </div>
-
+            <HeaderBar
+                title={currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                onPrev={() => onChangeMonth(-1)}
+                onNext={() => onChangeMonth(1)}
+                onToday={onToday}
+            />
             <div className="grid grid-cols-7 gap-2 mb-2">
                 {weekDaysLabels.map(day => (
                     <div key={day} className="text-center text-sm font-semibold text-gray-600">

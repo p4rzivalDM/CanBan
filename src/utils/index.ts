@@ -28,10 +28,17 @@ export const getWeekDays = (date: Date) => {
     return days;
 };
 
-export const priorityColors = {
-    high: 'border-l-4 border-red-500',
-    medium: 'border-l-4 border-yellow-500',
-    low: 'border-l-4 border-green-500'
+const prioritiesMapping = {
+    very_high: { id: 'very_high', label: 'Very High', color: 'border-red-500' },
+    high: { id: 'high', label: 'High', color: 'border-orange-500' },
+    medium: { id: 'medium', label: 'Medium', color: 'border-yellow-500' },
+    low: { id: 'low', label: 'Low', color: 'border-green-500' },
+    very_low: { id: 'very_low', label: 'Very Low', color: 'border-gray-500' }
+};
+
+export const priorityColors = (priority: string) => {
+    let colorClass = `border-l-4 ${prioritiesMapping[priority]?.color || 'border-yellow-500'}`;
+    return colorClass;
 };
 
 export const availableColors = [
@@ -39,3 +46,7 @@ export const availableColors = [
     'bg-pink-50', 'bg-yellow-50', 'bg-red-50', 'bg-orange-50',
     'bg-indigo-50', 'bg-cyan-50'
 ];
+
+export const availablePriorities = (priority: string) => {
+    return prioritiesMapping[priority]?.label || 'Medium';
+};    

@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Button } from './ui/button';
-import { Columns2, Download, FolderOpen, Redo, Undo } from 'lucide-react';
+import { CalendarDays, Columns2, Dog, Download, FolderOpen, Redo, Undo } from 'lucide-react';
 
 const HeaderControls = ({ viewMode, setViewMode, exportData, importData, undo, redo, historyState }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -19,7 +19,7 @@ const HeaderControls = ({ viewMode, setViewMode, exportData, importData, undo, r
     return (
         <div className="mb-6 flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
             <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-800">Dev Task Manager</h1>
+                <h1 className="text-2xl font-bold text-gray-800 flex items-center"><Dog size={32} />Ban Calendar</h1>
                 
             </div>
             <div className="flex gap-2">
@@ -27,13 +27,13 @@ const HeaderControls = ({ viewMode, setViewMode, exportData, importData, undo, r
                     onClick={() => setViewMode('kanban')}
                     variant={viewMode === 'kanban' ? 'default' : 'outline'}
                 >
-                    Kanban
+                    <Dog />
                 </Button>
                 <Button
                     onClick={() => setViewMode('calendar')}
                     variant={viewMode === 'calendar' ? 'default' : 'outline'}
                 >
-                    Calendar
+                    <CalendarDays />
                 </Button>
                 <Button
                     onClick={() => setViewMode('both')}

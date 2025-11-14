@@ -5,7 +5,7 @@ import { Textarea } from './ui/textarea';
 import { Field, FieldLabel } from './ui/field';
 import TagInput from './ui/tags';
 import { Trash } from 'lucide-react';
-import { Select, SelectItem, SelectContent, SelectTrigger, SelectValue } from './ui/select';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 
 const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
     const [editingForm, setEditingForm] = useState(viewingTask || null);
@@ -35,9 +35,9 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-transparent/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
             <div className="w-[90%] max-w-2xl bg-white rounded-lg p-6 shadow-lg">
-                <form>
+                <form onSubmit={(e) => e.preventDefault()}>
                     <h2 className="text-xl font-semibold mb-3">Edit task</h2>
                     <div className="grid grid-cols-1 gap-3">
                         <Field>
@@ -61,23 +61,31 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                             />
                         </Field>
                         <Field>
-                            <FieldLabel htmlFor="priority">Priority</FieldLabel>
-                            <Select>
-                                <SelectTrigger className="w-full">
-                                    <SelectValue
-                                        id="priority"
-                                        placeholder="Select priority"
-                                        defaultValue={editingForm?.priority || 'normal'}
-                                    />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="very-high">Very High</SelectItem>
-                                    <SelectItem value="high">High</SelectItem>
-                                    <SelectItem value="normal">Normal</SelectItem>
-                                    <SelectItem value="low">Low</SelectItem>
-                                    <SelectItem value="very-low">Very Low</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <FieldLabel>Priority</FieldLabel>
+                            <RadioGroup value={editingForm?.priority || 'medium'} onValueChange={(value) => handleChange('priority')({ target: { value } })}>
+                                <div className="flex gap-4">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="very_high" id="very_high" />
+                                        <label htmlFor="very_high" className="cursor-pointer">Very High</label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="high" id="high" />
+                                        <label htmlFor="high" className="cursor-pointer">High</label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="medium" id="medium" />
+                                        <label htmlFor="medium" className="cursor-pointer">Medium</label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="low" id="low" />
+                                        <label htmlFor="low" className="cursor-pointer">Low</label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="very_low" id="very_low" />
+                                        <label htmlFor="very_low" className="cursor-pointer">Very Low</label>
+                                    </div>
+                                </div>
+                            </RadioGroup>
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="date">Scheduled</FieldLabel>
@@ -94,7 +102,7 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                                     placeholder="Select time"
                                     type="time"
                                     value={editingForm?.time || ''}
-                                    onChange={(e) => setEditingForm(prev => ({ ...prev, time: e.target.value }))}
+                                    onChange={handleChange('time')}
                                 />
                             </div>
                         </Field>
@@ -113,7 +121,7 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                                     placeholder="Select time"
                                     type="time"
                                     value={editingForm?.deadline_time || ''}
-                                    onChange={(e) => setEditingForm(prev => ({ ...prev, deadline_time: e.target.value }))}
+                                    onChange={handleChange('deadline_time')}
                                 />
                             </div>
                         </Field>
@@ -122,7 +130,7 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                             <TagInput
                                 id="tags"
                                 value={editingForm?.tags || ''}
-                                onChange={(v) => setEditingForm(prev => ({ ...prev, tags: v }))}
+                                onChange={(v) => handleChange('tags')({ target: { value: v } })}
                                 placeholder="Add tags"
                             />
                         </Field>
@@ -130,6 +138,7 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                     <div className="mt-4 flex justify-between gap-2">
                         <div className="mt-4 flex justify-start gap-2">
                             <Button
+                                type="button"
                                 variant="destructive"
                                 size="icon"
                                 onClick={() => {
@@ -141,8 +150,8 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                             </Button>
                         </div>
                         <div className="mt-4 flex justify-end gap-2">
-                            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                            <Button variant="default" onClick={handleSave}>Save</Button>
+                            <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
+                            <Button type="button" variant="default" onClick={handleSave}>Save</Button>
                         </div>
                     </div>
                 </form>

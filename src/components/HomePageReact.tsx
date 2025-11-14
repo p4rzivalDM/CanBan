@@ -4,7 +4,6 @@ import HeaderControls from './HeaderControls';
 import TaskModal from './TaskModal';
 import KanbanView from './KanbanView';
 import CalendarView from './CalendarView';
-import { getDaysInMonth, getWeekDays, priorityColors, availableColors } from '../utils';
 
 const DevTaskManager = () => {
     // Helper to normalize tags (can be string or array)
@@ -34,12 +33,11 @@ const DevTaskManager = () => {
 
     const [viewMode, setViewMode] = useState('both');
     const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('month');
-    const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 12));
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [draggedTask, setDraggedTask] = useState(null);
     const [draggedColumn, setDraggedColumn] = useState(null);
     const [newTaskColumn, setNewTaskColumn] = useState(null);
     const [newTaskForm, setNewTaskForm] = useState({ title: '', date: '', time: '', deadline: '', deadline_time: '', priority: 'medium', tags: '', description: '' });
-    const [editingTask, setEditingTask] = useState(null);
     const [viewingTask, setViewingTask] = useState(null);
     const [editingColumn, setEditingColumn] = useState(null);
     const [openColumnMenu, setOpenColumnMenu] = useState(null);
@@ -55,8 +53,8 @@ const DevTaskManager = () => {
             }
         }
         return [
-            { id: 'todo', title: 'To Do', color: 'bg-slate-100', isDone: false },
-            { id: 'inProgress', title: 'In Progress', color: 'bg-blue-50', isDone: false },
+            { id: 'todo', title: 'To-do', color: 'bg-slate-100', isDone: false },
+            { id: 'inProgress', title: 'In progress', color: 'bg-blue-50', isDone: false },
             { id: 'done', title: 'Done', color: 'bg-green-50', isDone: true }
         ];
     });
@@ -286,7 +284,7 @@ const DevTaskManager = () => {
         const sortBy = columnSortBy[columnId];
 
         if (sortBy === 'priority') {
-            const priorityOrder = { high: 0, medium: 1, low: 2 };
+            const priorityOrder = { very_high: 0, high: 1, medium: 2, low: 3, very_low: 4 };
             return [...columnTasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
         }
 
@@ -364,6 +362,10 @@ const DevTaskManager = () => {
         setCurrentDate(newDate);
     };
 
+    const goToToday = () => {
+        setCurrentDate(new Date());
+    };
+
     const renderKanban = () => (
         <KanbanView
             columnsState={columnsState}
@@ -421,6 +423,7 @@ const DevTaskManager = () => {
             onChangeWeek={changeWeek}
             onChangeMonth={changeMonth}
             onSetCalendarView={setCalendarView}
+            onToday={goToToday}
             onViewTask={setViewingTask}
         />
     );

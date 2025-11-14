@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, GripVertical } from 'lucide-react';
-import { truncateText, priorityColors } from '../utils';
+import { truncateText, priorityColors, availablePriorities } from '../utils';
 
 interface KanbanCardProps {
     task: any;
@@ -21,7 +21,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         <div
             draggable
             onDragStart={() => onDragStart(task)}
-            className={`bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${priorityColors[task.priority]}`}
+            className={`bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${priorityColors(task.priority)}`}
             onClick={() => onViewTask(task)}
         >
             <div className="flex items-start justify-between mb-2">
@@ -49,12 +49,18 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
 
             <div className="mb-2">
                 <span className="text-xs font-medium text-gray-700 capitalize">Priority: </span>
-                <span className="text-xs text-gray-600 capitalize">{task.priority}</span>
+                <span className="text-xs text-gray-600 capitalize">{availablePriorities(task.priority)}</span>
             </div>
+
+            {task.date && (
+                <div className="mb-2 text-xs text-gray-600">
+                    <span>Scheduled: {new Date(task.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {task.time && `${task.time}`}</span>
+                </div>
+            )}
 
             {task.deadline && (
                 <div className="mb-2 text-xs font-medium">
-                    <span className="text-red-600">Deadline: {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {task.deadline_time && `@ ${task.deadline_time}`}</span>
+                    <span className="text-red-600">Deadline: {new Date(task.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} {task.deadline_time && `${task.deadline_time}`}</span>
                 </div>
             )}
 
