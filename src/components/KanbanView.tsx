@@ -84,6 +84,59 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         }
     };
 
+    // Drop onto a specific task to position before/after it (when not sorting by priority)
+    const handleDropOnTask = (e: React.DragEvent<HTMLDivElement>, targetTask: any) => {
+        if (!draggedTask || !onUpdateTask) return;
+
+        const targetColumn = targetTask.column;
+        // If target column is priority-sorted, skip reordering by position
+        if (columnSortBy[targetColumn] === 'priority') {
+            // If moving across columns, still move to target column appended
+            if (draggedTask.column !== targetColumn) {
+                const tasksInColumn = tasks.filter(t => t.column === targetColumn);
+                const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
+                onUpdateTask(draggedTask.id, { column: targetColumn, order: maxOrder + 1 });
+            }
+            setDraggedTask(null);
+            return;
+        }
+
+        const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+        const dropY = e.clientY;
+        const insertAfter = dropY > rect.top + rect.height / 2;
+
+        // Build the visible ordered list for the target column based on order
+        const columnTasks = tasks
+            .filter(t => t.column === targetColumn)
+            .sort((a, b) => a.order - b.order);
+
+        // Remove dragged task if it is currently in this list (same column case)
+        const filtered = columnTasks.filter(t => t.id !== draggedTask.id);
+        const targetIndex = filtered.findIndex(t => t.id === targetTask.id);
+
+        // Determine neighbors around insertion point
+        const prev = insertAfter
+            ? (targetIndex >= 0 ? filtered[targetIndex] : null)
+            : (targetIndex > 0 ? filtered[targetIndex - 1] : null);
+        const next = insertAfter
+            ? (targetIndex >= 0 && targetIndex + 1 < filtered.length ? filtered[targetIndex + 1] : null)
+            : (targetIndex >= 0 ? filtered[targetIndex] : null);
+
+        let newOrder: number;
+        if (prev && next) newOrder = (prev.order + next.order) / 2;
+        else if (!prev && next) newOrder = next.order - 1; // insert at head
+        else if (prev && !next) newOrder = prev.order + 1; // insert at tail
+        else newOrder = 0; // empty column fallback
+
+        // Apply update: move across columns if needed and set computed order
+        onUpdateTask(draggedTask.id, {
+            column: targetColumn,
+            order: newOrder
+        });
+
+        setDraggedTask(null);
+    };
+
     const getSortedTasks = (columnId) => {
         const columnTasks = tasks.filter(t => t.column === columnId);
         const sortBy = columnSortBy[columnId];
@@ -373,7 +426,19 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
                     <div className="space-y-3 overflow-y-auto flex-1 min-h-0">
                         {getSortedTasks(column.id).map((task) => (
-                            <div key={task.id}>
+                            <div
+                                key={task.id}
+                                onDragOver={(e) => {
+                                    // allow dropping on single card to define position
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDropOnTask(e, task);
+                                }}
+                            >
                                 <KanbanCard
                                     task={task}
                                     onViewTask={onViewTask}
@@ -383,6 +448,33 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 />
                             </div>
                         ))}
+                        {/* Bottom drop zone to append at end when not priority-sorted */}
+                        <div
+                            className="h-6"
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (!draggedTask || !onUpdateTask) return;
+                                const colId = column.id;
+                                if (columnSortBy[colId] === 'priority') {
+                                    // append only if moving across columns
+                                    if (draggedTask.column !== colId) {
+                                        const tasksInColumn = tasks.filter(t => t.column === colId);
+                                        const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
+                                        onUpdateTask(draggedTask.id, { column: colId, order: maxOrder + 1 });
+                                    }
+                                } else {
+                                    const tasksInColumn = tasks.filter(t => t.column === colId);
+                                    const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
+                                    onUpdateTask(draggedTask.id, { column: colId, order: maxOrder + 1 });
+                                }
+                                setDraggedTask(null);
+                            }}
+                        />
                     </div>
                 </div>
             ))}

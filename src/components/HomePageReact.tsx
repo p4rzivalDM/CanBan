@@ -9,48 +9,59 @@ const DevTaskManager = () => {
     const defaultTasks = [
         {
             id: 0,
-            title: 'This is your first task with a very long title to test text truncation in the Kanban card view',
+            title: 'Welcome to CanBan — overview',
             column: 'todo',
-            scheduled: '2025-11-13T05:20:00.000Z',
-            deadline: '2025-11-30T05:35:00.000Z',
+            scheduled: '2025-11-13T08:00:00.000Z',
+            deadline: '2025-11-30T17:00:00.000Z',
             priority: 'medium',
-            tags: 'test frontend backend',
-            description: 'This is your first task description to demonstrate how descriptions are displayed in the Kanban card view.',
+            tags: 'guide introduction',
+            description: 'CanBan combines Kanban and Calendar. Cards are tasks; columns are workflow phases (To do, In progress, Done, Deleted). Each card shows icons for priority, Scheduled and Deadline. Continue with the next cards to learn all features.',
             order: 0
         },
         {
             id: 1,
-            title: 'This is a sample task to describe the tool functionality',
-            column: 'inProgress',
-            scheduled: '2025-11-13T05:20:00.000Z',
-            deadline: '2025-11-30T05:35:00.000Z',
-            priority: 'medium',
-            tags: 'test learn',
-            description: 'This is a sample description for the task to demonstrate how descriptions are displayed in the Kanban card view.',
-            order: 0
+            title: 'Create and edit tasks',
+            column: 'todo',
+            scheduled: '2025-11-14T09:00:00.000Z',
+            deadline: '2025-12-01T18:00:00.000Z',
+            priority: 'high',
+            tags: 'create edit details',
+            description: 'Use the + button in a column header to add a card. Click a card to open details: change title, description, priority, tags, Scheduled and Deadline. Save to apply; delete from the modal if no longer needed.',
+            order: 1
         },
         {
             id: 2,
-            title: 'This is a sample task with a very long title to test text truncation in the Kanban card view',
-            column: 'done',
-            scheduled: '2025-11-13T05:20:00.000Z',
-            deadline: '2025-11-30T05:35:00.000Z',
+            title: 'Drag & drop and column options',
+            column: 'inProgress',
+            scheduled: '2025-11-15T10:00:00.000Z',
+            deadline: '2025-12-05T17:00:00.000Z',
             priority: 'medium',
-            tags: 'test adds aaaaaaaaaaa',
-            description: 'Descrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123',
+            tags: 'drag drop columns compact sort',
+            description: 'Drag cards to reorder or move between columns. Drag a column header to reorder columns. Click a column title to rename. In the ••• menu: Compact view, Sort by priority, Add left/right, Delete. Preferences are stored per column.',
             order: 0
         },
         {
             id: 3,
-            title: 'This is a sample task with a very long title to test text truncation in the Kanban card view',
+            title: 'Calendar and split view',
             column: 'done',
-            scheduled: '2025-11-13T05:20:00.000Z',
-            deadline: '2025-11-30T05:35:00.000Z',
-            priority: 'medium',
-            tags: 'test adds aaaaaaaaaaa',
-            description: 'Descrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123',
+            scheduled: '2025-11-16T09:30:00.000Z',
+            deadline: '2025-12-10T17:30:00.000Z',
+            priority: 'low',
+            tags: 'calendar split day week month',
+            description: 'From the top controls choose Kanban, Calendar or Both. In split view drag the central handle to resize. In Calendar switch between Day/Week/Month, jump to Today, and open tasks from the grid.',
             order: 0
         },
+        {
+            id: 4,
+            title: 'Undo/Redo, backup and trash',
+            column: 'deleted',
+            scheduled: '2025-11-17T08:30:00.000Z',
+            deadline: '2025-12-12T08:30:00.000Z',
+            priority: 'very_low',
+            tags: 'history export import localStorage',
+            description: 'Use Undo/Redo to return to a previous state. Export a JSON backup and import it to restore data. Data is auto-saved in the browser. The Deleted column can act as a trash; or delete directly from the modal. Long titles are truncated; descriptions wrap.',
+            order: 0
+        }
     ];
 
     const loadFromStorage = () => {

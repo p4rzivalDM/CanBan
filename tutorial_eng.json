@@ -1,0 +1,86 @@
+{
+  "tasks": [
+    {
+      "id": 0,
+      "title": "Welcome to CanBan — overview",
+      "column": "todo",
+      "scheduled": "2025-11-13T08:00:00.000Z",
+      "deadline": "2025-11-30T17:00:00.000Z",
+      "priority": "medium",
+      "tags": "guide introduction",
+      "description": "CanBan combines Kanban and Calendar. Cards are tasks; columns are workflow phases (To do, In progress, Done, Deleted). Each card shows icons for priority, Scheduled and Deadline. Continue with the next cards to learn all features.",
+      "order": 0
+    },
+    {
+      "id": 1,
+      "title": "Create and edit tasks",
+      "column": "todo",
+      "scheduled": "2025-11-14T09:00:00.000Z",
+      "deadline": "2025-12-01T18:00:00.000Z",
+      "priority": "high",
+      "tags": "create edit details",
+      "description": "Use the + button in a column header to add a card. Click a card to open details: change title, description, priority, tags, Scheduled and Deadline. Save to apply; delete from the modal if no longer needed.",
+      "order": 1
+    },
+    {
+      "id": 2,
+      "title": "Drag & drop and column options",
+      "column": "inProgress",
+      "scheduled": "2025-11-15T10:00:00.000Z",
+      "deadline": "2025-12-05T17:00:00.000Z",
+      "priority": "medium",
+      "tags": "drag drop columns compact sort",
+      "description": "Drag cards to reorder or move between columns. Drag a column header to reorder columns. Click a column title to rename. In the ••• menu: Compact view, Sort by priority, Add left/right, Delete. Preferences are stored per column.",
+      "order": 0
+    },
+    {
+      "id": 3,
+      "title": "Calendar and split view",
+      "column": "done",
+      "scheduled": "2025-11-16T09:30:00.000Z",
+      "deadline": "2025-12-10T17:30:00.000Z",
+      "priority": "low",
+      "tags": "calendar split day week month",
+      "description": "From the top controls choose Kanban, Calendar or Both. In split view drag the central handle to resize. In Calendar switch between Day/Week/Month, jump to Today, and open tasks from the grid.",
+      "order": 0
+    },
+    {
+      "id": 4,
+      "title": "Undo/Redo, backup and trash",
+      "column": "deleted",
+      "scheduled": "2025-11-17T08:30:00.000Z",
+      "deadline": "2025-12-12T08:30:00.000Z",
+      "priority": "very_low",
+      "tags": "history export import localStorage",
+      "description": "Use Undo/Redo to return to a previous state. Export a JSON backup and import it to restore data. Data is auto-saved in the browser. The Deleted column can act as a trash; or delete directly from the modal. Long titles are truncated; descriptions wrap.",
+      "order": 0
+    }
+  ],
+  "columns": [
+    {
+      "id": "todo",
+      "title": "To do",
+      "color": "bg-slate-100",
+      "isDone": false
+    },
+    {
+      "id": "inProgress",
+      "title": "In progress",
+      "color": "bg-blue-50",
+      "isDone": false
+    },
+    {
+      "id": "done",
+      "title": "Done",
+      "color": "bg-green-50",
+      "isDone": true
+    },
+    {
+      "id": "deleted",
+      "title": "Deleted",
+      "color": "bg-cyan-50",
+      "isDone": true
+    }
+  ],
+  "exportDate": "2025-11-15T20:16:09.219Z"
+}

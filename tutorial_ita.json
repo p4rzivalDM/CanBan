@@ -1,0 +1,86 @@
+{
+  "tasks": [
+    {
+      "id": 0,
+      "title": "Benvenuto in CanBan — panoramica",
+      "column": "todo",
+      "scheduled": "2025-11-13T08:00:00.000Z",
+      "deadline": "2025-11-30T17:00:00.000Z",
+      "priority": "medium",
+      "tags": "guida introduzione",
+      "description": "CanBan unisce Kanban e Calendario. Le card sono i task; le colonne rappresentano fasi (To do, In progress, Done, Deleted). Sulle card trovi icone per priorità, “Scheduled” e “Deadline”. Continua con le card successive per imparare le funzioni.",
+      "order": 0
+    },
+    {
+      "id": 1,
+      "title": "Crea e modifica task",
+      "column": "todo",
+      "scheduled": "2025-11-14T09:00:00.000Z",
+      "deadline": "2025-12-01T18:00:00.000Z",
+      "priority": "high",
+      "tags": "creazione editing dettagli",
+      "description": "Usa il pulsante + nel titolo della colonna per aggiungere una card. Clicca una card per aprire i dettagli: puoi cambiare titolo, descrizione, priorità, tag, Scheduled e Deadline. Salva per applicare; elimina dalla modale se non serve.",
+      "order": 1
+    },
+    {
+      "id": 2,
+      "title": "Drag&Drop e opzioni colonne",
+      "column": "inProgress",
+      "scheduled": "2025-11-15T10:00:00.000Z",
+      "deadline": "2025-12-05T17:00:00.000Z",
+      "priority": "medium",
+      "tags": "drag drop colonne compact sort",
+      "description": "Trascina le card per riordinarle o spostarle tra colonne. Trascina l’intestazione per riordinare le colonne. Clicca il titolo per rinominare. Dal menu •••: Compact view, Ordina per priorità, Aggiungi a sinistra/destra, Elimina. Le preferenze sono per-colonna.",
+      "order": 0
+    },
+    {
+      "id": 3,
+      "title": "Calendario e vista divisa",
+      "column": "done",
+      "scheduled": "2025-11-16T09:30:00.000Z",
+      "deadline": "2025-12-10T17:30:00.000Z",
+      "priority": "low",
+      "tags": "calendar split day week month",
+      "description": "Dai controlli in alto scegli Kanban, Calendario o Entrambe. Nella vista divisa trascina la maniglia centrale per ridimensionare. Nel Calendario passa tra Giorno/Settimana/Mese, vai ad Oggi e apri i task dalla griglia.",
+      "order": 0
+    },
+    {
+      "id": 4,
+      "title": "Undo/Redo, Backup e Cestino",
+      "column": "deleted",
+      "scheduled": "2025-11-17T08:30:00.000Z",
+      "deadline": "2025-12-12T08:30:00.000Z",
+      "priority": "very_low",
+      "tags": "storico export import localStorage",
+      "description": "Usa Annulla/Ripeti per tornare a uno stato precedente. Esporta un backup JSON e reimportalo per ripristinare i dati. I dati sono salvati automaticamente nel browser. La colonna Deleted può fare da cestino; oppure elimina dalla modale. Titoli lunghi vengono troncati, le descrizioni vanno a capo.",
+      "order": 0
+    }
+  ],
+  "columns": [
+    {
+      "id": "todo",
+      "title": "To do",
+      "color": "bg-slate-100",
+      "isDone": false
+    },
+    {
+      "id": "inProgress",
+      "title": "In progress",
+      "color": "bg-blue-50",
+      "isDone": false
+    },
+    {
+      "id": "done",
+      "title": "Done",
+      "color": "bg-green-50",
+      "isDone": true
+    },
+    {
+      "id": "deleted",
+      "title": "Deleted",
+      "color": "bg-cyan-50",
+      "isDone": true
+    }
+  ],
+  "exportDate": "2025-11-15T18:13:49.733Z"
+}
