@@ -14,6 +14,7 @@ interface KanbanViewProps {
     onAddColumnAtPosition: (columnId: string, position: string) => void;
     onDeleteColumn: (columnId: string) => void;
     onUpdateTask?: (taskId: string, updates: any) => void;
+    onReorderColumns?: (columns: any[]) => void;
 }
 
 const KanbanView: React.FC<KanbanViewProps> = ({
@@ -24,13 +25,15 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     onUpdateColumn,
     onAddColumnAtPosition,
     onDeleteColumn,
-    onUpdateTask
+    onUpdateTask,
+    onReorderColumns
 }) => {
     const [draggedTask, setDraggedTask] = useState(null);
     const [newTaskColumn, setNewTaskColumn] = useState(null);
     const [newTaskForm, setNewTaskForm] = useState({ title: '' });
     const [editingColumn, setEditingColumn] = useState(null);
     const [openOptionsMenu, setOpenOptionsMenu] = useState(null);
+    const [draggedColumn, setDraggedColumn] = useState(null);
     const [columnSortBy, setColumnSortBy] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('canban_column_sort');
@@ -104,6 +107,35 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         setCompactColumns(prev => ({ ...prev, [columnId]: !prev[columnId] }));
     };
 
+    const handleColumnDragStart = (column) => {
+        setDraggedColumn(column);
+    };
+
+    const handleColumnDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleColumnDrop = (targetColumn) => {
+        if (!draggedColumn || draggedColumn.id === targetColumn.id) {
+            setDraggedColumn(null);
+            return;
+        }
+
+        const newColumns = [...columnsState];
+        const draggedIndex = newColumns.findIndex(c => c.id === draggedColumn.id);
+        const targetIndex = newColumns.findIndex(c => c.id === targetColumn.id);
+
+        newColumns.splice(draggedIndex, 1);
+        newColumns.splice(targetIndex, 0, draggedColumn);
+
+        if (onReorderColumns) {
+            onReorderColumns(newColumns);
+        }
+        
+        setDraggedColumn(null);
+    };
+
     const handleContinueNewTask = (column) => {
         if (newTaskForm.title.trim()) {
             const newTask = {
@@ -125,20 +157,26 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         }
     };
     return (
-        <div className="flex flex-wrap gap-4 h-full overflow-auto pb-4">
+        <div className="flex flex-wrap gap-4 h-full">
             {columnsState.map(column => (
                 <div
                     key={column.id}
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(column.id)}
-                    className={`flex-1 min-w-[280px] ${column.color} rounded-lg p-4 relative`}
+                    onDragOver={(e) => {
+                        handleDragOver(e);
+                        handleColumnDragOver(e);
+                    }}
+                    onDrop={(e) => {
+                        handleDrop(column.id);
+                        handleColumnDrop(column);
+                    }}
+                    className={`flex-1 min-w-[280px] ${column.color} rounded-lg p-4 relative flex flex-col max-h-full`}
                 >
                     <div
                         draggable
                         onDragStart={(e) => {
-                            e.dataTransfer?.setData('columnId', column.id);
+                            handleColumnDragStart(column);
                         }}
-                        className="cursor-move mb-4"
+                        className="cursor-move mb-4 shrink-0"
                     >
                         <div className="flex items-center justify-between">
                             {editingColumn === column.id ? (
@@ -146,9 +184,15 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     type="text"
                                     defaultValue={column.title}
                                     autoFocus
-                                    onBlur={(e) => onUpdateColumn(column.id, { title: e.target.value })}
+                                    onBlur={(e) => {
+                                        onUpdateColumn(column.id, { title: e.target.value });
+                                        setEditingColumn(null);
+                                    }}
                                     onKeyDown={(e: any) => {
-                                        if (e.key === 'Enter') onUpdateColumn(column.id, { title: e.target.value });
+                                        if (e.key === 'Enter') {
+                                            onUpdateColumn(column.id, { title: e.target.value });
+                                            setEditingColumn(null);
+                                        }
                                         if (e.key === 'Escape') setEditingColumn(null);
                                     }}
                                 />
@@ -327,7 +371,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                         </div>
                     )}
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 overflow-y-auto flex-1 min-h-0">
                         {getSortedTasks(column.id).map((task) => (
                             <div key={task.id}>
                                 <KanbanCard

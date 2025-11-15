@@ -7,11 +7,50 @@ import CalendarView from './CalendarView';
 
 const DevTaskManager = () => {
     const defaultTasks = [
-        { id: '1', title: 'Implementare autenticazione', column: 'todo', date: '2025-11-13', time: '09:00', deadline: '2025-11-20', deadline_time: '17:00', priority: 'high', tags: ['backend', 'security'], description: 'Implementare sistema di autenticazione JWT con refresh token', order: 0 },
-        { id: '2', title: 'Refactoring componenti UI', column: 'inProgress', date: '2025-11-12', time: '14:30', deadline: '2025-11-18', deadline_time: '18:00', priority: 'medium', tags: ['frontend', 'refactor'], description: 'Refactoring dei componenti React per migliorare la manutenibilità', order: 0 },
-        { id: '3', title: 'Code review PR #234', column: 'inProgress', date: '2025-11-12', time: '10:00', deadline: '2025-11-13', deadline_time: '16:00', priority: 'high', tags: ['review'], description: 'Revisione pull request per nuova feature', order: 1 },
-        { id: '4', title: 'Fix bug login iOS', column: 'done', date: '2025-11-10', time: '11:00', deadline: '2025-11-12', deadline_time: '15:00', priority: 'high', tags: ['bug', 'mobile'], description: 'Risolto problema con il login su dispositivi iOS', order: 0 },
-        { id: '5', title: 'Ottimizzare query database', column: 'todo', date: '2025-11-15', time: '15:00', deadline: '2025-11-25', deadline_time: '17:00', priority: 'medium', tags: ['backend', 'performance'], description: 'Analisi e ottimizzazione delle query più lente', order: 1 },
+        {
+            id: 0,
+            title: 'This is your first task with a very long title to test text truncation in the Kanban card view',
+            column: 'todo',
+            scheduled: '2025-11-13T05:20:00.000Z',
+            deadline: '2025-11-30T05:35:00.000Z',
+            priority: 'medium',
+            tags: 'test frontend backend',
+            description: 'This is your first task description to demonstrate how descriptions are displayed in the Kanban card view.',
+            order: 0
+        },
+        {
+            id: 1,
+            title: 'This is a sample task to describe the tool functionality',
+            column: 'inProgress',
+            scheduled: '2025-11-13T05:20:00.000Z',
+            deadline: '2025-11-30T05:35:00.000Z',
+            priority: 'medium',
+            tags: 'test learn',
+            description: 'This is a sample description for the task to demonstrate how descriptions are displayed in the Kanban card view.',
+            order: 0
+        },
+        {
+            id: 2,
+            title: 'This is a sample task with a very long title to test text truncation in the Kanban card view',
+            column: 'done',
+            scheduled: '2025-11-13T05:20:00.000Z',
+            deadline: '2025-11-30T05:35:00.000Z',
+            priority: 'medium',
+            tags: 'test adds aaaaaaaaaaa',
+            description: 'Descrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123',
+            order: 0
+        },
+        {
+            id: 3,
+            title: 'This is a sample task with a very long title to test text truncation in the Kanban card view',
+            column: 'done',
+            scheduled: '2025-11-13T05:20:00.000Z',
+            deadline: '2025-11-30T05:35:00.000Z',
+            priority: 'medium',
+            tags: 'test adds aaaaaaaaaaa',
+            description: 'Descrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123\nDescrizione PROVA 123',
+            order: 0
+        },
     ];
 
     const loadFromStorage = () => {
@@ -39,9 +78,10 @@ const DevTaskManager = () => {
             }
         }
         return [
-            { id: 'todo', title: 'To-do', color: 'bg-slate-100', isDone: false },
+            { id: 'todo', title: 'To do', color: 'bg-slate-100', isDone: false },
             { id: 'inProgress', title: 'In progress', color: 'bg-blue-50', isDone: false },
-            { id: 'done', title: 'Done', color: 'bg-green-50', isDone: true }
+            { id: 'done', title: 'Done', color: 'bg-green-50', isDone: true },
+            { id: 'deleted', title: 'Deleted', color: 'bg-cyan-50', isDone: true }
         ];
     });
 
@@ -129,6 +169,11 @@ const DevTaskManager = () => {
 
         const newColumns = [...columnsState];
         newColumns.splice(insertIndex, 0, newColumn);
+        setColumnsState(newColumns);
+        pushSnapshot(tasks, newColumns);
+    };
+
+    const reorderColumns = (newColumns) => {
         setColumnsState(newColumns);
         pushSnapshot(tasks, newColumns);
     };
@@ -222,7 +267,7 @@ const DevTaskManager = () => {
             try {
                 const content = e.target?.result as string;
                 const data = JSON.parse(content);
-                
+
                 if (data.tasks && Array.isArray(data.tasks) && data.columns && Array.isArray(data.columns)) {
                     setTasks(data.tasks);
                     setColumnsState(data.columns);
@@ -272,6 +317,7 @@ const DevTaskManager = () => {
             onUpdateColumn={updateColumn}
             onAddColumnAtPosition={addColumnAtPosition}
             onDeleteColumn={deleteColumn}
+            onReorderColumns={reorderColumns}
         />
     );
 
@@ -302,7 +348,7 @@ const DevTaskManager = () => {
                 historyState={historyState}
             />
 
-        <div className="flex-1 overflow-hidden" ref={containerRef}>
+            <div className="flex-1 overflow-hidden" ref={containerRef}>
                 {viewMode === 'kanban' && (
                     <div className="h-full">{renderKanban()}</div>
                 )}
@@ -339,7 +385,7 @@ const DevTaskManager = () => {
                 onSave={(updated) => {
                     const taskExists = tasks.some(t => t.id === updated.id);
                     let newTasks;
-                    
+
                     if (taskExists) {
                         // Task esistente - aggiorna
                         newTasks = tasks.map(t => t.id === updated.id ? { ...updated } : t);
@@ -349,7 +395,7 @@ const DevTaskManager = () => {
                         const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
                         newTasks = [...tasks, { ...updated, order: maxOrder + 1 }];
                     }
-                    
+
                     setTasks(newTasks);
                     pushSnapshot(newTasks, columnsState);
                 }}

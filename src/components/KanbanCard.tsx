@@ -52,7 +52,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                 <div className="flex items-center gap-2 flex-1">
                     <GripVertical className="text-gray-400 mt-1 shrink-0 cursor-move w-4 h-4" />
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm mt-1 font-semibold text-gray-900 truncate">{truncateText(task.title, compact ? 40 : 50)}</p>
+                        <p className="text-sm mt-1 font-semibold text-gray-900 wrap-break-word w-7/8">{truncateText(task.title, compact ? 35 : 45)}</p>
                     </div>
                 </div>
                 <X
