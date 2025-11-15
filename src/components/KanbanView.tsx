@@ -1,33 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, X, MoreVertical, GripVertical, ChevronLeftSquare, ChevronRightSquare, Check } from 'lucide-react';
 import KanbanCard from './KanbanCard';
 import { availableColors } from '../utils';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 interface KanbanViewProps {
     columnsState: any[];
     tasks: any[];
     onViewTask: (task: any) => void;
     onDeleteTask: (taskId: string) => void;
-    onDragStart: (task: any) => void;
-    onDragOver: (e: React.DragEvent) => void;
-    onDrop: (columnId: string, e: React.DragEvent) => void;
-    getSortedTasks: (columnId: string) => any[];
-    newTaskColumn: string | null;
-    onAddTaskClick: (columnId: string) => void;
-    onCancelNewTask: () => void;
-    newTaskTitle: string;
-    onNewTaskTitleChange: (title: string) => void;
-    onContinueNewTask: (column: any) => void;
-    editingColumn: string | null;
-    onEditColumnClick: (columnId: string) => void;
-    openColumnMenu: string | null;
-    onToggleColumnMenu: (columnId: string) => void;
     onUpdateColumn: (columnId: string, updates: any) => void;
-    onToggleColumnSort: (columnId: string) => void;
-    columnSortBy: any;
     onAddColumnAtPosition: (columnId: string, position: string) => void;
     onDeleteColumn: (columnId: string) => void;
-    normalizeTags: (tags: any) => string[];
+    onUpdateTask?: (taskId: string, updates: any) => void;
 }
 
 const KanbanView: React.FC<KanbanViewProps> = ({
@@ -35,34 +21,116 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     tasks,
     onViewTask,
     onDeleteTask,
-    onDragStart,
-    onDragOver,
-    onDrop,
-    getSortedTasks,
-    newTaskColumn,
-    onAddTaskClick,
-    onCancelNewTask,
-    newTaskTitle,
-    onNewTaskTitleChange,
-    onContinueNewTask,
-    editingColumn,
-    onEditColumnClick,
-    openColumnMenu,
-    onToggleColumnMenu,
     onUpdateColumn,
-    onToggleColumnSort,
-    columnSortBy,
     onAddColumnAtPosition,
     onDeleteColumn,
-    normalizeTags
+    onUpdateTask
 }) => {
+    const [draggedTask, setDraggedTask] = useState(null);
+    const [newTaskColumn, setNewTaskColumn] = useState(null);
+    const [newTaskForm, setNewTaskForm] = useState({ title: '' });
+    const [editingColumn, setEditingColumn] = useState(null);
+    const [openOptionsMenu, setOpenOptionsMenu] = useState(null);
+    const [columnSortBy, setColumnSortBy] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('canban_column_sort');
+            return saved ? JSON.parse(saved) : {};
+        }
+        return {};
+    });
+    
+    const [compactColumns, setCompactColumns] = useState<Record<string, boolean>>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('canban_compact_columns');
+            return saved ? JSON.parse(saved) : {};
+        }
+        return {};
+    });
+
+    // Salvataggio automatico delle preferenze colonne
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('canban_column_sort', JSON.stringify(columnSortBy));
+        }
+    }, [columnSortBy]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('canban_compact_columns', JSON.stringify(compactColumns));
+        }
+    }, [compactColumns]);
+
+    const handleDragStart = (task) => {
+        setDraggedTask(task);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    const handleDrop = (columnId) => {
+        if (draggedTask && draggedTask.column !== columnId) {
+            const tasksInColumn = tasks.filter(t => t.column === columnId);
+            const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
+            
+            // Update task through parent callback if available, otherwise just view it
+            if (onUpdateTask) {
+                onUpdateTask(draggedTask.id, { column: columnId, order: maxOrder + 1 });
+            }
+            setDraggedTask(null);
+        }
+    };
+
+    const getSortedTasks = (columnId) => {
+        const columnTasks = tasks.filter(t => t.column === columnId);
+        const sortBy = columnSortBy[columnId];
+
+        if (sortBy === 'priority') {
+            const priorityOrder = { very_high: 0, high: 1, medium: 2, low: 3, very_low: 4 };
+            return [...columnTasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+        }
+
+        return [...columnTasks].sort((a, b) => a.order - b.order);
+    };
+
+    const toggleColumnSort = (columnId) => {
+        setColumnSortBy({
+            ...columnSortBy,
+            [columnId]: columnSortBy[columnId] === 'priority' ? null : 'priority'
+        });
+    };
+
+    const toggleCompactView = (columnId: string) => {
+        setCompactColumns(prev => ({ ...prev, [columnId]: !prev[columnId] }));
+    };
+
+    const handleContinueNewTask = (column) => {
+        if (newTaskForm.title.trim()) {
+            const newTask = {
+                id: Date.now().toString(),
+                title: newTaskForm.title,
+                column: column.id,
+                date: new Date().toISOString().split('T')[0],
+                time: '09:00',
+                deadline: '',
+                deadline_time: '',
+                priority: 'medium',
+                tags: '',
+                description: '',
+                order: 0
+            };
+            onViewTask(newTask);
+            setNewTaskColumn(null);
+            setNewTaskForm({ title: '' });
+        }
+    };
     return (
         <div className="flex flex-wrap gap-4 h-full overflow-auto pb-4">
             {columnsState.map(column => (
                 <div
                     key={column.id}
-                    onDragOver={onDragOver}
-                    onDrop={(e) => onDrop(column.id, e)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(column.id)}
                     className={`flex-1 min-w-[280px] ${column.color} rounded-lg p-4 relative`}
                 >
                     <div
@@ -74,15 +142,14 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                     >
                         <div className="flex items-center justify-between">
                             {editingColumn === column.id ? (
-                                <input
+                                <Input
                                     type="text"
                                     defaultValue={column.title}
-                                    className="font-bold text-gray-800 text-lg bg-white px-2 py-1 rounded border-2 border-blue-500 flex-1"
                                     autoFocus
                                     onBlur={(e) => onUpdateColumn(column.id, { title: e.target.value })}
                                     onKeyDown={(e: any) => {
                                         if (e.key === 'Enter') onUpdateColumn(column.id, { title: e.target.value });
-                                        if (e.key === 'Escape') onEditColumnClick('');
+                                        if (e.key === 'Escape') setEditingColumn(null);
                                     }}
                                 />
                             ) : (
@@ -90,7 +157,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     <GripVertical className="w-5 h-5 text-gray-400" />
                                     <h3
                                         className="font-bold text-gray-800 text-lg cursor-pointer hover:text-blue-600"
-                                        onClick={() => onEditColumnClick(column.id)}
+                                        onClick={() => setEditingColumn(column.id)}
                                     >
                                         {column.title}
                                     </h3>
@@ -100,45 +167,67 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 </div>
                             )}
                             <div className="flex gap-1">
-                                <button
-                                    onClick={() => onAddTaskClick(column.id)}
-                                    className="p-1 hover:bg-white/50 rounded transition-colors"
+                                <Button
+                                    onClick={() => setNewTaskColumn(column.id)}
                                     title="Add task"
+                                    size="icon"
+                                    variant="ghost"
                                 >
-                                    <Plus className="w-5 h-5" />
-                                </button>
+                                    <Plus />
+                                </Button>
                                 <div className="relative">
-                                    <button
-                                        onClick={() => onToggleColumnMenu(column.id)}
-                                        className="p-1 hover:bg-white/50 rounded transition-colors"
-                                        title="Column menu"
+                                    <Button
+                                        onClick={() => {
+                                            if (openOptionsMenu === column.id) {
+                                                setOpenOptionsMenu(null);
+                                            } else {
+                                                setOpenOptionsMenu(column.id);
+                                            }
+                                        }}
+                                        size="icon"
+                                        variant="ghost"
+                                        title="Options"
                                     >
-                                        <MoreVertical className="w-5 h-5" />
-                                    </button>
-                                    {openColumnMenu === column.id && (
+                                        <MoreVertical />
+                                    </Button>
+                                    {openOptionsMenu === column.id && (
                                         <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[200px]">
-                                            <button
+                                            <Button
                                                 onClick={() => {
-                                                    onToggleColumnSort(column.id);
-                                                    onToggleColumnMenu('');
+                                                    toggleCompactView(column.id);
+                                                    setOpenOptionsMenu(null);
                                                 }}
-                                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+                                                variant="outline"
+                                                className="w-full items-center justify-start border-0 rounded-none"
+                                            >
+                                                <span className={compactColumns?.[column.id] ? 'text-blue-600 font-medium' : ''}>
+                                                    <span className="flex gap-2">{compactColumns?.[column.id] ? <Check className="w-4 h-4" /> : ''}Compact view</span>
+                                                </span>
+                                            </Button>
+                                            <Button
+                                                onClick={() => {
+                                                    toggleColumnSort(column.id);
+                                                    setOpenOptionsMenu(null);
+                                                }}
+                                                variant="outline"
+                                                className="w-full items-center justify-start border-0 rounded-none"
                                             >
                                                 <span className={columnSortBy[column.id] === 'priority' ? 'text-blue-600 font-medium' : ''}>
                                                     <span className="flex gap-2">{columnSortBy[column.id] === 'priority' ? <Check className="w-4 h-4" /> : ''}Sort by priority</span>
                                                 </span>
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 onClick={() => {
                                                     onUpdateColumn(column.id, { isDone: !column.isDone });
-                                                    onToggleColumnMenu('');
+                                                    setOpenOptionsMenu(null);
                                                 }}
-                                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+                                                variant="outline"
+                                                className="w-full items-center justify-start border-0 rounded-none"
                                             >
                                                 <span className={column.isDone ? 'text-blue-600 font-medium' : ''}>
-                                                    <span className="flex gap-2">{column.isDone ? <Check className="w-4 h-4" />  : ''}Mark card as completed</span>
+                                                    <span className="flex gap-2">{column.isDone ? <Check className="w-4 h-4" /> : ''}Cards as completed</span>
                                                 </span>
-                                            </button>
+                                            </Button>
                                             <div className="px-4 py-2">
                                                 <div className="text-xs text-gray-600 mb-2">Column color:</div>
                                                 <div className="grid grid-cols-5 gap-1">
@@ -147,7 +236,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                                             key={color}
                                                             onClick={() => {
                                                                 onUpdateColumn(column.id, { color });
-                                                                onToggleColumnMenu('');
+                                                                setOpenOptionsMenu(null);
                                                             }}
                                                             className={`w-6 h-6 rounded ${color} border-2 ${column.color === color ? 'border-blue-600' : 'border-gray-300'}`}
                                                         />
@@ -175,7 +264,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                                     <button
                                                         onClick={() => {
                                                             onDeleteColumn(column.id);
-                                                            onToggleColumnMenu('');
+                                                            setOpenOptionsMenu(null);
                                                         }}
                                                         className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
                                                     >
@@ -194,28 +283,46 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                     {newTaskColumn === column.id && (
                         <div className="bg-white rounded-lg p-3 mb-3 shadow-sm">
                             <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
-                            <input
+                            <Input
                                 type="text"
+                                value={newTaskForm.title}
                                 placeholder="Task title..."
-                                className="w-full p-2 border rounded mb-2 text-sm"
-                                value={newTaskTitle}
-                                onChange={(e) => onNewTaskTitleChange(e.target.value)}
+                                onChange={(e) => setNewTaskForm({ title: e.target.value })}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Escape') {
+                                        setNewTaskColumn(null);
+                                        setNewTaskForm({ title: '' });
+                                    }
+                                    if (e.key === 'Enter' && e.shiftKey) handleContinueNewTask(column);
+                                }}
                                 autoFocus
                                 required
                             />
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => onContinueNewTask(column)}
-                                    className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors"
-                                >
-                                    Continue
-                                </button>
-                                <button
-                                    onClick={onCancelNewTask}
-                                    className="px-3 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300 transition-colors"
+                            <div className="flex gap-2 mt-2 justify-between">
+                                <Button
+                                    onClick={() => {
+                                        setNewTaskColumn(null);
+                                        setNewTaskForm({ title: '' });
+                                    }}
+                                    variant="destructive"
                                 >
                                     Cancel
-                                </button>
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        setNewTaskColumn(null);
+                                        setNewTaskForm({ title: '' });
+                                    }}
+                                    variant="outline"
+                                >
+                                    <Plus />
+                                </Button>
+                                <Button
+                                    onClick={() => handleContinueNewTask(column)}
+                                    variant="default"
+                                >
+                                    Continue
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -227,8 +334,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     task={task}
                                     onViewTask={onViewTask}
                                     onDeleteTask={onDeleteTask}
-                                    onDragStart={onDragStart}
-                                    normalizeTags={normalizeTags}
+                                    onDragStart={handleDragStart}
+                                    compact={!!compactColumns?.[column.id]}
                                 />
                             </div>
                         ))}

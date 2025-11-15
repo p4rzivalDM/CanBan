@@ -104,7 +104,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     if (calendarView === 'day') {
         const dateStr = currentDate.toISOString().split('T')[0];
         const isToday = dateStr === todayStr;
-        const dayTasks = tasks.filter(t => t.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
+        const dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) =>  (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
         const hours = Array.from({ length: 24 }, (_, i) => i);
 
         return (
@@ -167,7 +167,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                     <div className="grid grid-cols-7 gap-3">
                         {weekDays.map(day => {
                             const dateStr = day.toISOString().split('T')[0];
-                            const dayTasks = tasks.filter(t => t.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
+                        const dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) => (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
                             const isToday = dateStr === todayStr;
                             const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -227,7 +227,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const dayTasks = tasks.filter(t => t.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
+    const dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) => (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
         const isToday = dateStr === todayStr;
 
         days.push(

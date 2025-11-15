@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GripVertical, Columns2 } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import HeaderControls from './HeaderControls';
 import TaskModal from './TaskModal';
 import KanbanView from './KanbanView';
 import CalendarView from './CalendarView';
 
 const DevTaskManager = () => {
-    // Helper to normalize tags (can be string or array)
-    const normalizeTags = (tags) => {
-        if (Array.isArray(tags)) return tags;
-        if (typeof tags === 'string' && tags.length > 0) return tags.split(/\s+/).filter(Boolean);
-        return [];
-    };
-
     const defaultTasks = [
         { id: '1', title: 'Implementare autenticazione', column: 'todo', date: '2025-11-13', time: '09:00', deadline: '2025-11-20', deadline_time: '17:00', priority: 'high', tags: ['backend', 'security'], description: 'Implementare sistema di autenticazione JWT con refresh token', order: 0 },
         { id: '2', title: 'Refactoring componenti UI', column: 'inProgress', date: '2025-11-12', time: '14:30', deadline: '2025-11-18', deadline_time: '18:00', priority: 'medium', tags: ['frontend', 'refactor'], description: 'Refactoring dei componenti React per migliorare la manutenibilità', order: 0 },
@@ -34,14 +27,7 @@ const DevTaskManager = () => {
     const [viewMode, setViewMode] = useState('both');
     const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('month');
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [draggedTask, setDraggedTask] = useState(null);
-    const [draggedColumn, setDraggedColumn] = useState(null);
-    const [newTaskColumn, setNewTaskColumn] = useState(null);
-    const [newTaskForm, setNewTaskForm] = useState({ title: '', date: '', time: '', deadline: '', deadline_time: '', priority: 'medium', tags: '', description: '' });
     const [viewingTask, setViewingTask] = useState(null);
-    const [editingColumn, setEditingColumn] = useState(null);
-    const [openColumnMenu, setOpenColumnMenu] = useState(null);
-    const [columnSortBy, setColumnSortBy] = useState({});
     const [splitRatio, setSplitRatio] = useState(50);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef(null);
@@ -103,75 +89,6 @@ const DevTaskManager = () => {
         }
     };
 
-    // helpers and constants imported from ../utils
-
-    const handleDragStart = (task) => {
-        setDraggedTask(task);
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-    };
-
-    const handleDrop = (columnId) => {
-        if (draggedTask) {
-            const tasksInColumn = tasks.filter(t => t.column === columnId);
-            const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
-
-            const newTasks = tasks.map(t => t.id === draggedTask.id ? { ...t, column: columnId, order: maxOrder + 1 } : t);
-            setTasks(newTasks);
-            pushSnapshot(newTasks, columnsState);
-            setDraggedTask(null);
-        }
-    };
-
-    const handleColumnDragStart = (column, e) => {
-        e.stopPropagation();
-        setDraggedColumn(column);
-    };
-
-    const handleColumnDrop = (targetColumnId, e) => {
-        e.stopPropagation();
-        if (draggedColumn && draggedColumn.id !== targetColumnId) {
-            const newColumns = [...columnsState];
-            const draggedIndex = newColumns.findIndex(c => c.id === draggedColumn.id);
-            const targetIndex = newColumns.findIndex(c => c.id === targetColumnId);
-
-            newColumns.splice(draggedIndex, 1);
-            newColumns.splice(targetIndex, 0, draggedColumn);
-
-            setColumnsState(newColumns);
-            pushSnapshot(tasks, newColumns);
-            setDraggedColumn(null);
-        }
-    };
-
-    const addTask = (column) => {
-        if (newTaskForm.title.trim()) {
-            const tasksInColumn = tasks.filter(t => t.column === column);
-            const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
-
-            const newTask = {
-                id: Date.now().toString(),
-                title: newTaskForm.title,
-                column,
-                date: newTaskForm.date || new Date().toISOString().split('T')[0],
-                time: newTaskForm.time || '09:00',
-                deadline: newTaskForm.deadline || '',
-                deadline_time: newTaskForm.deadline_time || '',
-                priority: newTaskForm.priority,
-                tags: newTaskForm.tags.split(',').map(t => t.trim()).filter(t => t),
-                description: newTaskForm.description || '',
-                order: maxOrder + 1
-            };
-            const newTasks = [...tasks, newTask];
-            setTasks(newTasks);
-            pushSnapshot(newTasks, columnsState);
-            setNewTaskForm({ title: '', date: '', time: '', deadline: '', deadline_time: '', priority: 'medium', tags: '', description: '' });
-            setNewTaskColumn(null);
-        }
-    };
-
     const deleteTask = (taskId) => {
         const newTasks = tasks.filter(t => t.id !== taskId);
         setTasks(newTasks);
@@ -188,7 +105,6 @@ const DevTaskManager = () => {
         const newCols = columnsState.map(c => c.id === columnId ? { ...c, ...updates } : c);
         setColumnsState(newCols);
         pushSnapshot(tasks, newCols);
-        setEditingColumn(null);
     };
 
     const deleteColumn = (columnId) => {
@@ -215,7 +131,6 @@ const DevTaskManager = () => {
         newColumns.splice(insertIndex, 0, newColumn);
         setColumnsState(newColumns);
         pushSnapshot(tasks, newColumns);
-        setOpenColumnMenu(null);
     };
 
     const handleMouseDown = (e) => {
@@ -279,18 +194,6 @@ const DevTaskManager = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const getSortedTasks = (columnId) => {
-        const columnTasks = tasks.filter(t => t.column === columnId);
-        const sortBy = columnSortBy[columnId];
-
-        if (sortBy === 'priority') {
-            const priorityOrder = { very_high: 0, high: 1, medium: 2, low: 3, very_low: 4 };
-            return [...columnTasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-        }
-
-        return [...columnTasks].sort((a, b) => a.order - b.order);
-    };
-
     // Funzioni di importazione e esportazione
     const exportData = () => {
         const dataToExport = {
@@ -337,13 +240,6 @@ const DevTaskManager = () => {
         event.target.value = '';
     };
 
-    const toggleColumnSort = (columnId) => {
-        setColumnSortBy({
-            ...columnSortBy,
-            [columnId]: columnSortBy[columnId] === 'priority' ? null : 'priority'
-        });
-    };
-
     // getWeekDays imported from utils (week starts Monday)
 
     const changeMonth = (delta) => {
@@ -372,44 +268,10 @@ const DevTaskManager = () => {
             tasks={tasks}
             onViewTask={setViewingTask}
             onDeleteTask={deleteTask}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={(columnId) => handleDrop(columnId)}
-            getSortedTasks={getSortedTasks}
-            newTaskColumn={newTaskColumn}
-            onAddTaskClick={setNewTaskColumn}
-            onCancelNewTask={() => setNewTaskColumn(null)}
-            newTaskTitle={newTaskForm.title}
-            onNewTaskTitleChange={(title) => setNewTaskForm({ ...newTaskForm, title })}
-            onContinueNewTask={(column) => {
-                if (newTaskForm.title.trim()) {
-                    const newTask = {
-                        id: Date.now().toString(),
-                        title: newTaskForm.title,
-                        column: column.id,
-                        date: new Date().toISOString().split('T')[0],
-                        time: '09:00',
-                        deadline: '',
-                        deadline_time: '',
-                        priority: 'medium',
-                        tags: '',
-                        description: '',
-                        order: 0
-                    };
-                    setViewingTask(newTask);
-                    setNewTaskColumn(null);
-                }
-            }}
-            editingColumn={editingColumn}
-            onEditColumnClick={setEditingColumn}
-            openColumnMenu={openColumnMenu}
-            onToggleColumnMenu={setOpenColumnMenu}
+            onUpdateTask={updateTask}
             onUpdateColumn={updateColumn}
-            onToggleColumnSort={toggleColumnSort}
-            columnSortBy={columnSortBy}
             onAddColumnAtPosition={addColumnAtPosition}
             onDeleteColumn={deleteColumn}
-            normalizeTags={normalizeTags}
         />
     );
 

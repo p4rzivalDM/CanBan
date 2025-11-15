@@ -6,6 +6,7 @@ import { Field, FieldLabel } from './ui/field';
 import TagInput from './ui/tags';
 import { Trash } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { DateTime } from './ui/date-time';
 
 const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
     const [editingForm, setEditingForm] = useState(viewingTask || null);
@@ -88,42 +89,20 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                             </RadioGroup>
                         </Field>
                         <Field>
-                            <FieldLabel htmlFor="date">Scheduled</FieldLabel>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="date"
-                                    placeholder="Select date"
-                                    type="date"
-                                    value={editingForm?.date || ''}
-                                    onChange={handleChange('date')}
-                                />
-                                <Input
-                                    id="time"
-                                    placeholder="Select time"
-                                    type="time"
-                                    value={editingForm?.time || ''}
-                                    onChange={handleChange('time')}
-                                />
-                            </div>
+                            <FieldLabel htmlFor="scheduled">Scheduled</FieldLabel>
+                            <DateTime
+                                id="scheduled"
+                                value={editingForm?.scheduled || ''}
+                                onChange={handleChange('scheduled')}
+                            />
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="deadline">Deadline</FieldLabel>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="deadline"
-                                    placeholder="Select date"
-                                    type="date"
-                                    value={editingForm?.deadline || ''}
-                                    onChange={handleChange('deadline')}
-                                />
-                                <Input
-                                    id="deadline-time"
-                                    placeholder="Select time"
-                                    type="time"
-                                    value={editingForm?.deadline_time || ''}
-                                    onChange={handleChange('deadline_time')}
-                                />
-                            </div>
+                            <DateTime
+                                id="deadline"
+                                value={editingForm?.deadline || ''}
+                                onChange={handleChange('deadline')}
+                            />
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="tags">Tags</FieldLabel>
