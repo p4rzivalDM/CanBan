@@ -1,17 +1,16 @@
 ---
-// Welcome to Astro! Everything between these triple-dash code fences
-// is your "component frontmatter". It never runs in the browser.
-console.log("This runs in your terminal, not the browser!");
-
 import HomePageReact from '../components/HomePageReact.tsx'
 import "../styles/global.css";
 ---
 
-<!-- Below is your "component template." It's just HTML, but with
-    some magic sprinkled in to help you build great templates. -->
 <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Ban Calendar</title>
+        <link rel="icon" type="image/svg+xml" href="/dog.svg" />
+    </head>
     <body>
-        <!-- <h1>Hello, World!</h1> -->
         <HomePageReact client:load/>
     </body>
 </html>
