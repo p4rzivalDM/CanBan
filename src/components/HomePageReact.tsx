@@ -427,9 +427,20 @@ const DevTaskManager = () => {
 
     // Funzioni di importazione e esportazione
     const exportData = () => {
+        // Determine splitRatio based on viewMode
+        let exportSplitRatio = splitRatio;
+        if (viewMode === 'calendar') {
+            exportSplitRatio = 0;
+        } else if (viewMode === 'kanban') {
+            exportSplitRatio = 100;
+        }
+        
         const dataToExport = {
             tasks,
             columns: columnsState,
+            settings,
+            viewMode,
+            splitRatio: exportSplitRatio,
             exportDate: new Date().toISOString()
         };
         const jsonString = JSON.stringify(dataToExport, null, 2);
@@ -455,15 +466,30 @@ const DevTaskManager = () => {
                 const data = JSON.parse(content);
 
                 if (data.tasks && Array.isArray(data.tasks) && data.columns && Array.isArray(data.columns)) {
+                    // Import core data
                     setTasks(data.tasks);
                     setColumnsState(data.columns);
                     pushSnapshot(data.tasks, data.columns);
-                    alert('Dati importati con successo!');
+                    
+                    // Import settings if available
+                    if (data.settings) {
+                        setSettings(data.settings);
+                    }
+                    
+                    // Import view mode and split ratio if available
+                    if (data.viewMode) {
+                        setViewMode(data.viewMode);
+                    }
+                    if (typeof data.splitRatio === 'number') {
+                        setSplitRatio(data.splitRatio);
+                    }
+                    
+                    alert('Data imported successfully!');
                 } else {
-                    alert('Formato file non valido. Assicurati di aver utilizzato un file esportato da CanBan.');
+                    alert('Invalid file format. Please use a file exported from CanBan.');
                 }
             } catch (error) {
-                alert('Errore durante l\'importazione del file. Assicurati che il file sia un JSON valido.');
+                alert('Error importing file. Please make sure the file is a valid JSON.');
             }
         };
         reader.readAsText(file);
