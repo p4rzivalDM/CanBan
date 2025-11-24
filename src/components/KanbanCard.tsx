@@ -73,13 +73,13 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                     {task.scheduled && (
                         <div className="text-xs text-gray-600 flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
-                            <span>{format(new Date(task.scheduled), 'dd/MM/yyyy')}</span>
+                            <span>{format(new Date(task.scheduled), 'dd/MM/yyyy HH:mm')}</span>
                         </div>
                     )}
                     {task.deadline && (
                         <div className="text-xs font-medium flex items-center gap-1">
                             <AlertCircle className="w-3 h-3 text-red-600" />
-                            <span className="text-red-600">{format(new Date(task.deadline), 'dd/MM/yyyy')}</span>
+                            <span className="text-red-600">{format(new Date(task.deadline), 'dd/MM/yyyy HH:mm')}</span>
                         </div>
                     )}
                 </div>

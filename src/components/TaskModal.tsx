@@ -36,11 +36,13 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-            <div className="w-[90%] max-w-2xl bg-white rounded-lg p-6 shadow-lg">
-                <form onSubmit={(e) => e.preventDefault()}>
-                    <h2 className="text-xl font-semibold mb-3">Edit task</h2>
-                    <div className="grid grid-cols-1 gap-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+            <div className="max-h-[95vh] w-full max-w-2xl bg-white rounded-lg shadow-lg flex flex-col">
+                <form onSubmit={(e) => e.preventDefault()} className="flex flex-col h-full overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 shrink-0">
+                        <h2 className="text-xl font-semibold">Edit task</h2>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 px-4 pt-4 overflow-y-auto flex-1">
                         <Field>
                             <FieldLabel htmlFor="title">Title</FieldLabel>
                             <Input
@@ -114,8 +116,8 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                             />
                         </Field>
                     </div>
-                    <div className="mt-4 flex justify-between gap-2">
-                        <div className="mt-4 flex justify-start gap-2">
+                    <div className="mt-4 p-4 flex justify-between gap-2 border-t border-gray-200 shrink-0">
+                        <div className="flex justify-start gap-2">
                             <Button
                                 type="button"
                                 variant="destructive"
@@ -128,7 +130,7 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                                 <Trash />
                             </Button>
                         </div>
-                        <div className="mt-4 flex justify-end gap-2">
+                        <div className="flex justify-end gap-2">
                             <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
                             <Button type="button" variant="default" onClick={handleSave}>Save</Button>
                         </div>

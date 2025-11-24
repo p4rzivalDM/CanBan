@@ -231,11 +231,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         const isToday = dateStr === todayStr;
 
         days.push(
-            <div key={day} className={`min-h-[100px] border rounded-lg p-2 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}>
+            <div key={day} className={`min-h-[100px] border rounded-lg p-2 ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'} flex flex-col`}>
                 <div className={`text-sm font-semibold mb-1 ${isToday ? 'text-blue-600' : 'text-gray-600'}`}>
                     {day}
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 overflow-y-auto flex-1 min-h-0">
                     {dayTasks.map(task => {
                         const column = columnsState.find(c => c.id === task.column);
                         const isDone = column?.isDone;

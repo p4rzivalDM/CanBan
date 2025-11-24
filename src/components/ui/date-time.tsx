@@ -78,7 +78,7 @@ export const DateTime = ({ id, value, onChange = (e) => { } }) => {
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {completeDate ? (
-                                format(completeDate, "dd/MM/yyyy hh:mm")
+                                format(completeDate, "dd/MM/yyyy HH:mm")
                             ) : (
                                 <span>25/12/1985 12:15</span>
                             )}
