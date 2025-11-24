@@ -5,6 +5,7 @@ import TaskModal from './TaskModal';
 import KanbanView from './KanbanView';
 import CalendarView from './CalendarView';
 import ViewSkeleton from './ViewSkeleton';
+import SettingsModal from './SettingsModal';
 import { Spinner } from './ui/spinner';
 import '../styles/transitions.css';
 
@@ -12,11 +13,27 @@ const DevTaskManager = () => {
     // Durata del loading iniziale (in ms) - modifica questo valore per cambiare velocemente
     const INITIAL_LOAD_DELAY = 300;
 
-    // Limiti del divisorio per il cambio modalità
-    const DIVIDER_LEFT_LIMIT = 12;    // Se < di questo, passa a Kanban
-    const DIVIDER_RIGHT_LIMIT = 88;   // Se > di questo, passa a Calendar
+    // Impostazioni con state
+    const [settings, setSettings] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const savedSettings = localStorage.getItem('canban_settings');
+            if (savedSettings) {
+                return JSON.parse(savedSettings);
+            }
+        }
+        return {
+            dividerLeftLimit: 12,
+            dividerRightLimit: 88
+        };
+    });
+
+    const DIVIDER_LEFT_LIMIT = settings.dividerLeftLimit;
+    const DIVIDER_RIGHT_LIMIT = settings.dividerRightLimit;
     const SAVED_RATIO_MIN = 20;       // Minimo ratio salvato quando si torna a "both"
     const SAVED_RATIO_MAX = 80;       // Massimo ratio salvato quando si torna a "both"
+
+    // State per la modale settings
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const defaultTasks = [
         {
@@ -289,6 +306,13 @@ const DevTaskManager = () => {
         }
     }, [splitRatio]);
 
+    // Salvataggio automatico delle impostazioni
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('canban_settings', JSON.stringify(settings));
+        }
+    }, [settings]);
+
     useEffect(() => {
         if (isDragging) {
             const handleMouseMoveEvent = (e) => {
@@ -519,6 +543,7 @@ const DevTaskManager = () => {
                         undo={undo}
                         redo={redo}
                         historyState={historyState}
+                        onSettingsClick={() => setIsSettingsOpen(true)}
                     />
 
                     <div className="flex-1 overflow-hidden" ref={containerRef}>
@@ -661,6 +686,13 @@ const DevTaskManager = () => {
                         onDelete={(id) => {
                             deleteTask(id);
                         }}
+                    />
+
+                    <SettingsModal
+                        settings={settings}
+                        onSettingsChange={setSettings}
+                        isOpen={isSettingsOpen}
+                        onOpenChange={setIsSettingsOpen}
                     />
                 </>
             )}

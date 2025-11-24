@@ -53,7 +53,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => onSet('month')}
                 type="button"
                 size="sm"
-                variant={current === 'month' ? 'default' : 'secondary'}
+                variant={current === 'month' ? 'default' : 'outline'}
             >
                 Month
             </Button>
@@ -61,7 +61,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => onSet('week')}
                 type="button"
                 size="sm"
-                variant={current === 'week' ? 'default' : 'secondary'}
+                variant={current === 'week' ? 'default' : 'outline'}
             >
                 Week
             </Button>
@@ -69,7 +69,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => onSet('day')}
                 type="button"
                 size="sm"
-                variant={current === 'day' ? 'default' : 'secondary'}
+                variant={current === 'day' ? 'default' : 'outline'}
             >
                 Day
             </Button>
@@ -86,7 +86,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         onToday?: () => void;
     }> = ({ title, onPrev, onNext, onToday }) => (
         <div className="flex items-center justify-between mb-4 bg-white p-4 rounded-lg shadow-sm">
-            <Button onClick={onPrev} size="icon">
+            <Button variant="outline" onClick={onPrev} size="icon">
                 <ChevronLeft className="w-5 h-5" />
             </Button>
             <div className="text-center">
@@ -95,7 +95,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 </div>
                 <ViewSelector current={calendarView} onSet={onSetCalendarView} showToday={!containsToday} onToday={onToday} />
             </div>
-            <Button onClick={onNext} size="icon">
+            <Button variant="outline"onClick={onNext} size="icon">
                 <ChevronRight className="w-5 h-5" />
             </Button>
         </div>
