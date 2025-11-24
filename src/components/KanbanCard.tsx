@@ -2,7 +2,6 @@ import React from 'react';
 import { X, GripVertical, Calendar, AlertCircle, Flame, AlertTriangle, CircleDot, ArrowDown, Minus } from 'lucide-react';
 import { truncateText, priorityColors, availablePriorities } from '../utils';
 import { format } from "date-fns";
-import { Button } from './ui/button';
 
 interface KanbanCardProps {
     task: any;
@@ -41,6 +40,24 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                 return <CircleDot className="w-3 h-3 text-yellow-500" />;
         }
     };
+
+    const renderMarkdownPreview = (text: string) => {
+        if (!text) return '';
+
+        let html = text;
+
+        // Code blocks with language
+        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+            return `<pre class="bg-gray-900 text-gray-100 p-2 rounded text-xs my-1 overflow-x-auto"><code class="font-mono">${code.trim()}</code></pre>`;
+        });
+
+        return html
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-red-600 px-1 rounded text-xs">$1</code>')
+            .replace(/\n/g, '<br />');
+    };
+
     return (
         <div
             draggable
@@ -63,9 +80,15 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                     }}
                 />
             </div>
-
             {(!compact && task.description) && (
-                <p className="text-xs text-gray-600 mb-2 break-all w-7/8">{task.description}</p>
+                <div className="mb-2 w-full overflow-hidden">
+                    <div className="w-full overflow-y-auto">
+                        <div
+                            className="text-xs text-gray-600 px-2 wrap-break-word max-h-90"
+                            dangerouslySetInnerHTML={{ __html: renderMarkdownPreview(task.description) }}
+                        />
+                    </div>
+                </div>
             )}
             {compact ? (
                 <div className="flex items-center gap-2 mb-1">

@@ -4,8 +4,11 @@ import HeaderControls from './HeaderControls';
 import TaskModal from './TaskModal';
 import KanbanView from './KanbanView';
 import CalendarView from './CalendarView';
+import { Spinner } from './ui/spinner';
 
 const DevTaskManager = () => {
+    // Durata del loading iniziale (in ms) - modifica questo valore per cambiare velocemente
+    const INITIAL_LOAD_DELAY = 300;
     const defaultTasks = [
         {
             id: 0,
@@ -74,12 +77,25 @@ const DevTaskManager = () => {
 
     const [tasks, setTasks] = useState(loadFromStorage());
 
-    const [viewMode, setViewMode] = useState('both');
+    const [viewMode, setViewMode] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const savedViewMode = localStorage.getItem('canban_viewMode');
+            return savedViewMode || 'both';
+        }
+        return 'both';
+    });
     const [calendarView, setCalendarView] = useState<'day' | 'week' | 'month'>('month');
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewingTask, setViewingTask] = useState(null);
-    const [splitRatio, setSplitRatio] = useState(50);
+    const [splitRatio, setSplitRatio] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const savedSplitRatio = localStorage.getItem('canban_splitRatio');
+            return savedSplitRatio ? parseFloat(savedSplitRatio) : 50;
+        }
+        return 50;
+    });
     const [isDragging, setIsDragging] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
     const containerRef = useRef(null);
     const [columnsState, setColumnsState] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -213,6 +229,30 @@ const DevTaskManager = () => {
         document.body.style.userSelect = '';
     };
 
+    // Caricamento iniziale da localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // Sincronizza viewMode da localStorage
+            const savedViewMode = localStorage.getItem('canban_viewMode');
+            if (savedViewMode && savedViewMode !== viewMode) {
+                setViewMode(savedViewMode);
+            }
+
+            // Sincronizza splitRatio da localStorage
+            const savedSplitRatio = localStorage.getItem('canban_splitRatio');
+            if (savedSplitRatio) {
+                setSplitRatio(parseFloat(savedSplitRatio));
+            }
+
+            // Marca il componente come caricato dopo il delay
+            const timer = setTimeout(() => {
+                setIsLoaded(true);
+            }, INITIAL_LOAD_DELAY);
+
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
     // Salvataggio automatico dei tasks
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -226,6 +266,20 @@ const DevTaskManager = () => {
             localStorage.setItem('canban_columns', JSON.stringify(columnsState));
         }
     }, [columnsState]);
+
+    // Salvataggio automatico della modalità di visualizzazione
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('canban_viewMode', viewMode);
+        }
+    }, [viewMode]);
+
+    // Salvataggio automatico della posizione del divisorio
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('canban_splitRatio', splitRatio.toString());
+        }
+    }, [splitRatio]);
 
     useEffect(() => {
         if (isDragging) {
@@ -349,71 +403,79 @@ const DevTaskManager = () => {
 
     return (
         <div className="h-screen bg-linear-to-br from-slate-50 to-slate-100 p-6 flex flex-col">
-            <HeaderControls
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                exportData={exportData}
-                importData={importData}
-                undo={undo}
-                redo={redo}
-                historyState={historyState}
-            />
+            {!isLoaded ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <Spinner className="size-8" />
+                </div>
+            ) : (
+                <>
+                    <HeaderControls
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        exportData={exportData}
+                        importData={importData}
+                        undo={undo}
+                        redo={redo}
+                        historyState={historyState}
+                    />
 
-            <div className="flex-1 overflow-hidden" ref={containerRef}>
-                {viewMode === 'kanban' && (
-                    <div className="h-full">{renderKanban()}</div>
-                )}
+                    <div className="flex-1 overflow-hidden" ref={containerRef}>
+                        {viewMode === 'kanban' && (
+                            <div className="h-full">{renderKanban()}</div>
+                        )}
 
-                {viewMode === 'calendar' && (
-                    <div className="h-full">{renderCalendar()}</div>
-                )}
+                        {viewMode === 'calendar' && (
+                            <div className="h-full">{renderCalendar()}</div>
+                        )}
 
-                {viewMode === 'both' && (
-                    <div className="flex h-full relative">
-                        <div className="overflow-auto" style={{ width: `${splitRatio}%` }}>
-                            {renderKanban()}
-                        </div>
+                        {viewMode === 'both' && (
+                            <div className="flex h-full relative">
+                                <div className="overflow-auto" style={{ width: `${splitRatio}%` }}>
+                                    {renderKanban()}
+                                </div>
 
-                        <div
-                            className="w-8 flex items-center justify-center px-2"
-                            onMouseDown={handleMouseDown}
-                        >
-                            <div className="w-4 h-10 bg-gray-400 hover:bg-blue-500 rounded-full flex items-center justify-center">
-                                <GripVertical className="w-3 h-3 text-white" />
+                                <div
+                                    className="w-8 flex items-center justify-center px-2"
+                                    onMouseDown={handleMouseDown}
+                                >
+                                    <div className="w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center">
+                                        <GripVertical className="w-3 h-3 text-white" />
+                                    </div>
+                                </div>
+
+                                <div className="overflow-auto" style={{ width: `${100 - splitRatio}%` }}>
+                                    {renderCalendar()}
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="overflow-auto" style={{ width: `${100 - splitRatio}%` }}>
-                            {renderCalendar()}
-                        </div>
+                        )}
                     </div>
-                )}
-            </div>
 
-            <TaskModal
-                viewingTask={viewingTask}
-                setViewingTask={setViewingTask}
-                onSave={(updated) => {
-                    const taskExists = tasks.some(t => t.id === updated.id);
-                    let newTasks;
+                    <TaskModal
+                        viewingTask={viewingTask}
+                        setViewingTask={setViewingTask}
+                        onSave={(updated) => {
+                            const taskExists = tasks.some(t => t.id === updated.id);
+                            let newTasks;
 
-                    if (taskExists) {
-                        // Task esistente - aggiorna
-                        newTasks = tasks.map(t => t.id === updated.id ? { ...updated } : t);
-                    } else {
-                        // Nuovo task - aggiungi
-                        const tasksInColumn = tasks.filter(t => t.column === updated.column);
-                        const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
-                        newTasks = [...tasks, { ...updated, order: maxOrder + 1 }];
-                    }
+                            if (taskExists) {
+                                // Task esistente - aggiorna
+                                newTasks = tasks.map(t => t.id === updated.id ? { ...updated } : t);
+                            } else {
+                                // Nuovo task - aggiungi
+                                const tasksInColumn = tasks.filter(t => t.column === updated.column);
+                                const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
+                                newTasks = [...tasks, { ...updated, order: maxOrder + 1 }];
+                            }
 
-                    setTasks(newTasks);
-                    pushSnapshot(newTasks, columnsState);
-                }}
-                onDelete={(id) => {
-                    deleteTask(id);
-                }}
-            />
+                            setTasks(newTasks);
+                            pushSnapshot(newTasks, columnsState);
+                        }}
+                        onDelete={(id) => {
+                            deleteTask(id);
+                        }}
+                    />
+                </>
+            )}
         </div>
     );
 };

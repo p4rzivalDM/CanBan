@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
+import { MarkdownEditor } from './ui/markdown-editor';
 import { Field, FieldLabel } from './ui/field';
 import TagInput from './ui/tags';
 import { Trash } from 'lucide-react';
@@ -37,7 +37,7 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
-            <div className="max-h-[95vh] w-full max-w-2xl bg-white rounded-lg shadow-lg flex flex-col">
+            <div className="max-h-[95vh] w-full max-w-5xl bg-white rounded-lg shadow-lg flex flex-col">
                 <form onSubmit={(e) => e.preventDefault()} className="flex flex-col h-full overflow-hidden">
                     <div className="p-4 border-b border-gray-200 shrink-0">
                         <h2 className="text-xl font-semibold">Edit task</h2>
@@ -55,12 +55,10 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                         </Field>
                         <Field>
                             <FieldLabel htmlFor="description">Description</FieldLabel>
-                            <Textarea
+                            <MarkdownEditor
                                 id="description"
-                                placeholder="Enter task description"
-                                rows={4}
                                 value={editingForm?.description || ''}
-                                onChange={handleChange('description')}
+                                onChange={(value) => handleChange('description')({ target: { value } })}
                             />
                         </Field>
                         <Field>

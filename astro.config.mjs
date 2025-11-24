@@ -9,6 +9,10 @@ export default defineConfig({
   integrations: [react()],
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    ssr: {
+      noExternal: ["@uiw/react-md-editor", "@uiw/react-markdown-preview"],
+      external: ["@babel/runtime"]
+    }
   }
 });

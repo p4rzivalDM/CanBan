@@ -125,3 +125,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Scrollbar styling - match ScrollArea component style */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  transition: background-color 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.854 0.019 255.428);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-color: var(--border) transparent;
+  scrollbar-width: thin;
+}

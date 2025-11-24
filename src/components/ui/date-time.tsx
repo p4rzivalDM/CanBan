@@ -11,7 +11,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 
 export const DateTime = ({ id, value, onChange = (e) => { } }) => {
@@ -105,7 +104,7 @@ export const DateTime = ({ id, value, onChange = (e) => { } }) => {
                             onSelect={handleDateSelect}
                         />
                         <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-                            <ScrollArea className="w-64 sm:w-auto">
+                            <div className="w-64 sm:w-auto overflow-x-auto sm:overflow-y-auto">
                                 <div className="flex sm:flex-col p-2">
                                     {hours.map((hour) => (
                                         <Button
@@ -119,9 +118,8 @@ export const DateTime = ({ id, value, onChange = (e) => { } }) => {
                                         </Button>
                                     ))}
                                 </div>
-                                <ScrollBar orientation="horizontal" className="sm:hidden" />
-                            </ScrollArea>
-                            <ScrollArea className="w-64 sm:w-auto">
+                            </div>
+                            <div className="w-64 sm:w-auto overflow-x-auto sm:overflow-y-auto">
                                 <div className="flex sm:flex-col p-2">
                                     {Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
                                         <Button
@@ -135,8 +133,7 @@ export const DateTime = ({ id, value, onChange = (e) => { } }) => {
                                         </Button>
                                     ))}
                                 </div>
-                                <ScrollBar orientation="horizontal" className="sm:hidden" />
-                            </ScrollArea>
+                            </div>
                         </div>
                     </div>
                 </PopoverContent>
