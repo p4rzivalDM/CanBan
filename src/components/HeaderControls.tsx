@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
 import { Button } from './ui/button';
 import { CalendarDays, Columns2, Dog, Download, FolderOpen, Redo, Undo } from 'lucide-react';
+import '../styles/transitions.css';
 
-const HeaderControls = ({ viewMode, setViewMode, exportData, importData, undo, redo, historyState }) => {
+const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, importData, undo, redo, historyState }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImportClick = () => {
@@ -17,30 +18,33 @@ const HeaderControls = ({ viewMode, setViewMode, exportData, importData, undo, r
         }
     };
     return (
-        <div className="mb-6 flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
+        <div className="mb-6 flex items-center justify-between bg-white p-4 rounded-lg shadow-sm header-controls">
             <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-gray-800 flex items-center"><Dog size={32} />Ban Calendar</h1>
                 
             </div>
             <div className="flex gap-2">
                 <Button
-                    onClick={() => setViewMode('kanban')}
-                    variant={viewMode === 'kanban' ? 'default' : 'outline'}
-                >
-                    <Dog />
-                </Button>
-                <Button
                     onClick={() => setViewMode('calendar')}
-                    variant={viewMode === 'calendar' ? 'default' : 'outline'}
+                    variant={(previewMode || viewMode) === 'calendar' ? 'default' : 'outline'}
+                    className="view-mode-button"
                 >
                     <CalendarDays />
                 </Button>
                 <Button
                     onClick={() => setViewMode('both')}
-                    variant={viewMode === 'both' ? 'default' : 'outline'}
+                    variant={(previewMode || viewMode) === 'both' ? 'default' : 'outline'}
+                    className="view-mode-button"
                     title="Split view"
                 >
                     <Columns2 />
+                </Button>
+                <Button
+                    onClick={() => setViewMode('kanban')}
+                    variant={(previewMode || viewMode) === 'kanban' ? 'default' : 'outline'}
+                    className="view-mode-button"
+                >
+                    <Dog />
                 </Button>
                 <div className="border-l border-slate-300 mx-2"></div>
                 <Button

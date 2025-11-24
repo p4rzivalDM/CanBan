@@ -4,11 +4,20 @@ import HeaderControls from './HeaderControls';
 import TaskModal from './TaskModal';
 import KanbanView from './KanbanView';
 import CalendarView from './CalendarView';
+import ViewSkeleton from './ViewSkeleton';
 import { Spinner } from './ui/spinner';
+import '../styles/transitions.css';
 
 const DevTaskManager = () => {
     // Durata del loading iniziale (in ms) - modifica questo valore per cambiare velocemente
     const INITIAL_LOAD_DELAY = 300;
+
+    // Limiti del divisorio per il cambio modalità
+    const DIVIDER_LEFT_LIMIT = 12;    // Se < di questo, passa a Kanban
+    const DIVIDER_RIGHT_LIMIT = 88;   // Se > di questo, passa a Calendar
+    const SAVED_RATIO_MIN = 20;       // Minimo ratio salvato quando si torna a "both"
+    const SAVED_RATIO_MAX = 80;       // Massimo ratio salvato quando si torna a "both"
+
     const defaultTasks = [
         {
             id: 0,
@@ -96,6 +105,9 @@ const DevTaskManager = () => {
     });
     const [isDragging, setIsDragging] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isSnapAnimating, setIsSnapAnimating] = useState(false);
+    const [savedSplitRatio, setSavedSplitRatio] = useState(50);
+    const [dragMode, setDragMode] = useState<'split' | 'from-kanban' | 'from-calendar' | null>(null);
     const containerRef = useRef(null);
     const [columnsState, setColumnsState] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -208,25 +220,21 @@ const DevTaskManager = () => {
     const handleMouseDown = (e) => {
         e.preventDefault();
         setIsDragging(true);
-        document.body.style.userSelect = 'none';
-    };
 
-    const handleMouseMove = (e) => {
-        if (!isDragging || !containerRef.current) return;
-
-        const container = containerRef.current;
-        const rect = container.getBoundingClientRect();
-        const newRatio = ((e.clientX - rect.left) / rect.width) * 100;
-
-        // lasciare un po' di spazio ai lati (25%)
-        if (newRatio > 25 && newRatio < 75) {
-            setSplitRatio(newRatio);
+        // Determina da quale vista si sta trascinando e inizializza il ratio
+        if (viewMode === 'both') {
+            setDragMode('split');
+        } else if (viewMode === 'kanban') {
+            setDragMode('from-kanban');
+            // Inizializza il splitRatio a sinistra (il kanban è a sinistra)
+            setSplitRatio(100);
+        } else if (viewMode === 'calendar') {
+            setDragMode('from-calendar');
+            // Inizializza il splitRatio a destra (il calendar è a destra)
+            setSplitRatio(0);
         }
-    };
 
-    const handleMouseUp = () => {
-        setIsDragging(false);
-        document.body.style.userSelect = '';
+        document.body.style.userSelect = 'none';
     };
 
     // Caricamento iniziale da localStorage
@@ -283,18 +291,107 @@ const DevTaskManager = () => {
 
     useEffect(() => {
         if (isDragging) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-        } else {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        }
+            const handleMouseMoveEvent = (e) => {
+                if (!containerRef.current) return;
 
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging]);
+                const container = containerRef.current;
+                const rect = container.getBoundingClientRect();
+                let newRatio = ((e.clientX - rect.left) / rect.width) * 100;
+
+                // Arrotonda a step di 0.1%
+                newRatio = Math.round(newRatio * 10) / 10;
+
+                // Limita il ratio tra 0 e 100
+                newRatio = Math.max(0, Math.min(100, newRatio));
+
+                // Durante il drag, aggiorna il ratio ma non la modalità
+                setSplitRatio(newRatio);
+            };
+
+            const handleMouseUpEvent = () => {
+                setIsDragging(false);
+                document.body.style.userSelect = '';
+
+                // Cambia modalità solo se il rilascio avviene oltre i limiti
+                setSplitRatio((ratio) => {
+                    // Arrotonda al numero intero più vicino
+                    const roundedRatio = Math.round(ratio);
+
+                    // Se stai trascinando dalla vista singola, passa a split se ti muovi abbastanza
+                    if (dragMode === 'from-kanban') {
+                        // Dragging from kanban view - if moved enough to the right, go to split
+                        if (roundedRatio < DIVIDER_RIGHT_LIMIT) {
+                            setViewMode('both');
+                            setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
+                        }
+                        return roundedRatio;
+                    } else if (dragMode === 'from-calendar') {
+                        // Dragging from calendar view - if moved enough to the left, go to split
+                        if (roundedRatio > DIVIDER_LEFT_LIMIT) {
+                            setViewMode('both');
+                            setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
+                        }
+                        return roundedRatio;
+                    }
+
+                    // Modalità split view
+                    if (roundedRatio < DIVIDER_LEFT_LIMIT) {
+                        // Trascinato oltre il limite sinistro -> mostra solo Kanban
+                        setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
+                        setViewMode((currentMode) => {
+                            if (currentMode !== 'calendar') {
+                                setIsSnapAnimating(true);
+                                setTimeout(() => {
+                                    setIsSnapAnimating(false);
+                                }, 250);
+                                return 'calendar';
+                            }
+                            return currentMode;
+                        });
+                    } else if (roundedRatio > DIVIDER_RIGHT_LIMIT) {
+                        // Trascinato oltre il limite destro -> mostra solo Calendar
+                        setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
+                        setViewMode((currentMode) => {
+                            if (currentMode !== 'kanban') {
+                                setIsSnapAnimating(true);
+                                setTimeout(() => {
+                                    setIsSnapAnimating(false);
+                                }, 250);
+                                return 'kanban';
+                            }
+                            return currentMode;
+                        });
+                    } else {
+                        // Rilascio dentro la zona di split view -> rimani in split
+                        setViewMode((currentMode) => {
+                            if (currentMode !== 'both') {
+                                return 'both';
+                            }
+                            return currentMode;
+                        });
+                    }
+                    return roundedRatio;
+                });
+
+                setDragMode(null);
+            };
+
+            document.addEventListener('mousemove', handleMouseMoveEvent);
+            document.addEventListener('mouseup', handleMouseUpEvent);
+
+            return () => {
+                document.removeEventListener('mousemove', handleMouseMoveEvent);
+                document.removeEventListener('mouseup', handleMouseUpEvent);
+            };
+        }
+    }, [isDragging, dragMode]);
+
+    // Ripristina il splitRatio quando torni a "both"
+    useEffect(() => {
+        if (viewMode === 'both' && (splitRatio < DIVIDER_LEFT_LIMIT || splitRatio > DIVIDER_RIGHT_LIMIT)) {
+            setSplitRatio(savedSplitRatio);
+        }
+    }, [viewMode]);
 
     // registra snapshot iniziale una volta
     useEffect(() => {
@@ -411,6 +508,11 @@ const DevTaskManager = () => {
                 <>
                     <HeaderControls
                         viewMode={viewMode}
+                        previewMode={isDragging ? (
+                            splitRatio <= DIVIDER_LEFT_LIMIT ? 'calendar' :
+                            splitRatio >= DIVIDER_RIGHT_LIMIT ? 'kanban' :
+                            'both'
+                        ) : null}
                         setViewMode={setViewMode}
                         exportData={exportData}
                         importData={importData}
@@ -421,30 +523,116 @@ const DevTaskManager = () => {
 
                     <div className="flex-1 overflow-hidden" ref={containerRef}>
                         {viewMode === 'kanban' && (
-                            <div className="h-full">{renderKanban()}</div>
+                            <div className="flex h-full relative">
+                                <div className="overflow-auto flex-1">
+                                    {renderKanban()}
+                                </div>
+
+                                {/* Divider hover per tornare a split view */}
+                                <div
+                                    className="w-8 flex items-center justify-center px-2 hover:bg-gray-100 relative group"
+                                    onMouseDown={handleMouseDown}
+                                >
+                                    {isDragging && dragMode === 'from-kanban' ? (
+                                        <div className="text-sm font-bold text-gray-700" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
+                                            {(splitRatio).toFixed(1)}%
+                                        </div>
+                                    ) : (
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center cursor-col-resize">
+                                                <GripVertical className="w-3 h-3 text-white" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Vista fantasma del calendar - skeleton finché non raggiungi il limite destro */}
+                                <div className="overflow-auto" style={{ width: isDragging && dragMode === 'from-kanban' ? `${100 - splitRatio}%` : '0%' }}>
+                                    {isDragging && dragMode === 'from-kanban' ? (
+                                        splitRatio >= DIVIDER_RIGHT_LIMIT ? (
+                                            <ViewSkeleton type="calendar" />
+                                        ) : (
+                                            renderCalendar()
+                                        )
+                                    ) : null}
+                                </div>
+                            </div>
                         )}
 
                         {viewMode === 'calendar' && (
-                            <div className="h-full">{renderCalendar()}</div>
+                            <div className="flex h-full relative">
+                                {/* Vista fantasma del kanban - skeleton finché non raggiungi il limite sinistro */}
+                                <div className="overflow-auto" style={{ width: isDragging && dragMode === 'from-calendar' ? `${splitRatio}%` : '0%' }}>
+                                    {isDragging && dragMode === 'from-calendar' ? (
+                                        splitRatio <= DIVIDER_LEFT_LIMIT ? (
+                                            <ViewSkeleton type="kanban" />
+                                        ) : (
+                                            renderKanban()
+                                        )
+                                    ) : null}
+                                </div>
+
+                                {/* Divider hover per tornare a split view */}
+                                <div
+                                    className="w-8 flex items-center justify-center px-2 hover:bg-gray-100 relative group"
+                                    onMouseDown={handleMouseDown}
+                                >
+                                    {isDragging && dragMode === 'from-calendar' ? (
+                                        <div className="text-sm font-bold text-gray-700" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
+                                            {(splitRatio).toFixed(1)}%
+                                        </div>
+                                    ) : (
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center cursor-col-resize">
+                                                <GripVertical className="w-3 h-3 text-white" />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="overflow-auto flex-1">
+                                    {renderCalendar()}
+                                </div>
+                            </div>
                         )}
 
                         {viewMode === 'both' && (
                             <div className="flex h-full relative">
                                 <div className="overflow-auto" style={{ width: `${splitRatio}%` }}>
-                                    {renderKanban()}
+                                    {splitRatio < DIVIDER_LEFT_LIMIT ? (
+                                        <ViewSkeleton type="kanban" />
+                                    ) : (
+                                        renderKanban()
+                                    )}
                                 </div>
 
                                 <div
-                                    className="w-8 flex items-center justify-center px-2"
+                                    className="w-8 flex items-center justify-center px-2 hover:bg-gray-100 relative group"
                                     onMouseDown={handleMouseDown}
                                 >
-                                    <div className="w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center">
-                                        <GripVertical className="w-3 h-3 text-white" />
-                                    </div>
+                                    {isDragging ? (
+                                        <div className="text-sm font-bold text-gray-700" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
+                                            {(splitRatio).toFixed(1)}%
+                                        </div>
+                                    ) : (
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className={`w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center transition-colors ${isSnapAnimating ? 'divider-snap' : ''}`}
+                                                style={isSnapAnimating ? {
+                                                    '--snap-distance': splitRatio < 50 ? '-100px' : '100px'
+                                                } as React.CSSProperties : {}}
+                                            >
+                                                <GripVertical className="w-3 h-3 text-white" />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="overflow-auto" style={{ width: `${100 - splitRatio}%` }}>
-                                    {renderCalendar()}
+                                    {splitRatio > DIVIDER_RIGHT_LIMIT ? (
+                                        <ViewSkeleton type="calendar" />
+                                    ) : (
+                                        renderCalendar()
+                                    )}
                                 </div>
                             </div>
                         )}
