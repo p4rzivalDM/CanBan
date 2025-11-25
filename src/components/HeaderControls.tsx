@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Button } from './ui/button';
-import { CalendarDays, Columns2, Dog, Download, FolderOpen, Redo, Undo, Settings } from 'lucide-react';
+import { CalendarDays, Columns2, Dog, Download, FolderOpen, Redo, Undo, Settings, FileUp } from 'lucide-react';
 import '../styles/transitions.css';
 
 const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, importData, undo, redo, historyState, onSettingsClick }) => {
@@ -76,7 +76,7 @@ const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, import
                     variant={'outline'}
                     title="Import data from JSON file"
                 >
-                    <FolderOpen /> Import
+                    <FileUp /> Import
                 </Button>
                 <div className="border-l border-slate-300 mx-2"></div>
                 <Button
