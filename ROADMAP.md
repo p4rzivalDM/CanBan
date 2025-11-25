@@ -13,6 +13,8 @@ Planned:
 - [ ] "Estimated time" field
 - [ ] Tabular tasks view
 - [ ] Drag cards in month/week/day to reschedule
+- [ ] Cards as deleted - hide deleted cards from calendar views (like completed)
+- [ ] Google Drive connection feature for automatic backup
 
 Implemented:
 - [x] Split / single view transitions
