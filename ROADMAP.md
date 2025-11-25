@@ -4,6 +4,7 @@
 
 ### Features
 Planned:
+- [ ] Ability to change projects without exiting and saving a single page
 - [ ] CSV export / import
 - [ ] Click day in Month view to open Day view
 - [ ] Dynamic tab icon color
