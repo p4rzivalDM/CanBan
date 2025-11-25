@@ -27,8 +27,8 @@ const DevTaskManager = () => {
         };
     });
 
-    const DIVIDER_LEFT_LIMIT = settings.dividerLeftLimit;
-    const DIVIDER_RIGHT_LIMIT = settings.dividerRightLimit;
+    const DIVIDER_LEFT_LIMIT = settings.dividerLeftLimit || 12;
+    const DIVIDER_RIGHT_LIMIT = settings.dividerRightLimit || 88;
     const SAVED_RATIO_MIN = 20;       // Minimo ratio salvato quando si torna a "both"
     const SAVED_RATIO_MAX = 80;       // Massimo ratio salvato quando si torna a "both"
 
@@ -341,24 +341,10 @@ const DevTaskManager = () => {
                     // Arrotonda al numero intero più vicino
                     const roundedRatio = Math.round(ratio);
 
-                    // Se stai trascinando dalla vista singola, passa a split se ti muovi abbastanza
-                    if (dragMode === 'from-kanban') {
-                        // Dragging from kanban view - if moved enough to the right, go to split
-                        if (roundedRatio < DIVIDER_RIGHT_LIMIT) {
-                            setViewMode('both');
-                            setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
-                        }
-                        return roundedRatio;
-                    } else if (dragMode === 'from-calendar') {
-                        // Dragging from calendar view - if moved enough to the left, go to split
-                        if (roundedRatio > DIVIDER_LEFT_LIMIT) {
-                            setViewMode('both');
-                            setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
-                        }
-                        return roundedRatio;
+                    if (roundedRatio < DIVIDER_RIGHT_LIMIT && roundedRatio > DIVIDER_LEFT_LIMIT) {
+                        setViewMode('both');
+                        setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
                     }
-
-                    // Modalità split view
                     if (roundedRatio < DIVIDER_LEFT_LIMIT) {
                         // Trascinato oltre il limite sinistro -> mostra solo Kanban
                         setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
@@ -372,7 +358,8 @@ const DevTaskManager = () => {
                             }
                             return currentMode;
                         });
-                    } else if (roundedRatio > DIVIDER_RIGHT_LIMIT) {
+                    }
+                    if (roundedRatio > DIVIDER_RIGHT_LIMIT) {
                         // Trascinato oltre il limite destro -> mostra solo Calendar
                         setSavedSplitRatio(Math.max(SAVED_RATIO_MIN, Math.min(SAVED_RATIO_MAX, roundedRatio)));
                         setViewMode((currentMode) => {
@@ -382,14 +369,6 @@ const DevTaskManager = () => {
                                     setIsSnapAnimating(false);
                                 }, 250);
                                 return 'kanban';
-                            }
-                            return currentMode;
-                        });
-                    } else {
-                        // Rilascio dentro la zona di split view -> rimani in split
-                        setViewMode((currentMode) => {
-                            if (currentMode !== 'both') {
-                                return 'both';
                             }
                             return currentMode;
                         });
@@ -575,8 +554,12 @@ const DevTaskManager = () => {
                     <div className="flex-1 overflow-hidden" ref={containerRef}>
                         {viewMode === 'kanban' && (
                             <div className="flex h-full relative">
-                                <div className="overflow-auto flex-1">
-                                    {renderKanban()}
+                                <div className="overflow-auto" style={{ width: isDragging && dragMode === 'from-kanban' ? `${splitRatio}%` : '100%' }}>
+                                    {splitRatio < DIVIDER_LEFT_LIMIT ? (
+                                        <ViewSkeleton type="kanban" />
+                                    ) : (
+                                        renderKanban()
+                                    )}
                                 </div>
 
                                 {/* Divider hover per tornare a split view */}
@@ -641,8 +624,12 @@ const DevTaskManager = () => {
                                     )}
                                 </div>
 
-                                <div className="overflow-auto flex-1">
-                                    {renderCalendar()}
+                                <div className="overflow-auto" style={{ width: isDragging && dragMode === 'from-calendar' ? `${100 - splitRatio}%` : '100%' }}>
+                                    {splitRatio > DIVIDER_RIGHT_LIMIT ? (
+                                        <ViewSkeleton type="calendar" />
+                                    ) : (
+                                        renderCalendar()
+                                    )}
                                 </div>
                             </div>
                         )}
