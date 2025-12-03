@@ -1,9 +1,15 @@
 import React, { useRef } from 'react';
 import { Button } from './ui/button';
-import { CalendarDays, Columns2, Dog, Download, FolderOpen, Redo, Undo, Settings, FileUp } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { CalendarDays, Columns2, Dog, Download, FolderOpen, Redo, Undo, Settings, FileUp, ChevronDown } from 'lucide-react';
 import '../styles/transitions.css';
 
-const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, importData, undo, redo, historyState, onSettingsClick }) => {
+const HeaderControls = ({ viewMode, previewMode, setViewMode, exportToJSON, importDataUnified, exportToCSV, undo, redo, historyState, onSettingsClick }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImportClick = () => {
@@ -11,8 +17,7 @@ const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, import
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        importData(e);
-        // Reset input so the same file can be imported again
+        importDataUnified(e);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -66,17 +71,28 @@ const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, import
                     <Redo /> Redo
                 </Button>
                 <div className="border-l border-slate-300 mx-2"></div>
-                <Button
-                    onClick={exportData}
-                    variant={'outline'}
-                    title="Export data as JSON"
-                >
-                    <Download /> Export
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button
+                            variant={'outline'}
+                            title="Export data"
+                        >
+                            <Download /> Export <ChevronDown className="w-4 h-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={exportToJSON}>
+                            <Download /> JSON
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={exportToCSV}>
+                            <Download /> CSV
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                     onClick={handleImportClick}
                     variant={'outline'}
-                    title="Import data from JSON file"
+                    title="Import data from JSON or CSV file"
                 >
                     <FileUp /> Import
                 </Button>
@@ -91,7 +107,7 @@ const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, import
                 <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".json"
+                    accept=".json,.csv"
                     onChange={handleFileChange}
                     className="hidden"
                 />

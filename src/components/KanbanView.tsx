@@ -4,6 +4,13 @@ import KanbanCard from './KanbanCard';
 import { availableColors } from '../utils';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from './ui/dropdown-menu';
 
 interface KanbanViewProps {
     columnsState: any[];
@@ -32,7 +39,6 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     const [newTaskColumn, setNewTaskColumn] = useState(null);
     const [newTaskForm, setNewTaskForm] = useState({ title: '' });
     const [editingColumn, setEditingColumn] = useState(null);
-    const [openOptionsMenu, setOpenOptionsMenu] = useState(null);
     const [draggedColumn, setDraggedColumn] = useState(null);
     const [columnSortBy, setColumnSortBy] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -298,107 +304,71 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 >
                                     <Plus />
                                 </Button>
-                                <div className="relative">
-                                    <Button
-                                        onClick={() => {
-                                            if (openOptionsMenu === column.id) {
-                                                setOpenOptionsMenu(null);
-                                            } else {
-                                                setOpenOptionsMenu(column.id);
-                                            }
-                                        }}
-                                        size="icon"
-                                        variant="ghost"
-                                        title="Column options"
-                                    >
-                                        <MoreVertical />
-                                    </Button>
-                                    {openOptionsMenu === column.id && (
-                                        <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[200px]">
-                                            <Button
-                                                onClick={() => {
-                                                    toggleCompactView(column.id);
-                                                    setOpenOptionsMenu(null);
-                                                }}
-                                                variant="outline"
-                                                className="w-full items-center justify-start border-0 rounded-none"
-                                            >
-                                                <span className={compactColumns?.[column.id] ? 'text-blue-600 font-medium' : ''}>
-                                                    <span className="flex gap-2">{compactColumns?.[column.id] ? <Check className="w-4 h-4" /> : ''}Compact view</span>
-                                                </span>
-                                            </Button>
-                                            <Button
-                                                onClick={() => {
-                                                    toggleColumnSort(column.id);
-                                                    setOpenOptionsMenu(null);
-                                                }}
-                                                variant="outline"
-                                                className="w-full items-center justify-start border-0 rounded-none"
-                                            >
-                                                <span className={columnSortBy[column.id] === 'priority' ? 'text-blue-600 font-medium' : ''}>
-                                                    <span className="flex gap-2">{columnSortBy[column.id] === 'priority' ? <Check className="w-4 h-4" /> : ''}Sort by priority</span>
-                                                </span>
-                                            </Button>
-                                            <Button
-                                                onClick={() => {
-                                                    onUpdateColumn(column.id, { isDone: !column.isDone });
-                                                    setOpenOptionsMenu(null);
-                                                }}
-                                                variant="outline"
-                                                className="w-full items-center justify-start border-0 rounded-none"
-                                            >
-                                                <span className={column.isDone ? 'text-blue-600 font-medium' : ''}>
-                                                    <span className="flex gap-2">{column.isDone ? <Check className="w-4 h-4" /> : ''}Cards as completed</span>
-                                                </span>
-                                            </Button>
-                                            <div className="px-4 py-2">
-                                                <div className="text-xs text-gray-600 mb-2">Column color:</div>
-                                                <div className="grid grid-cols-5 gap-1">
-                                                    {availableColors.map(color => (
-                                                        <button
-                                                            key={color}
-                                                            onClick={() => {
-                                                                onUpdateColumn(column.id, { color });
-                                                                setOpenOptionsMenu(null);
-                                                            }}
-                                                            className={`w-6 h-6 rounded ${color} border-2 ${column.color === color ? 'border-blue-600' : 'border-gray-300'}`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <div className="border-t border-gray-200 my-1"></div>
-                                            <button
-                                                onClick={() => onAddColumnAtPosition(column.id, 'left')}
-                                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
-                                            >
-                                                <ChevronLeftSquare className="w-4 h-4" />
-                                                Add on left
-                                            </button>
-                                            <button
-                                                onClick={() => onAddColumnAtPosition(column.id, 'right')}
-                                                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
-                                            >
-                                                <ChevronRightSquare className="w-4 h-4" />
-                                                Add on right
-                                            </button>
-                                            {columnsState.length > 1 && (
-                                                <>
-                                                    <div className="border-t border-gray-200 my-1"></div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            title="Column options"
+                                        >
+                                            <MoreVertical />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-[200px]">
+                                        <DropdownMenuItem onClick={() => toggleCompactView(column.id)}>
+                                            {compactColumns?.[column.id] && <Check className="w-4 h-4" />}
+                                            <span className={compactColumns?.[column.id] ? 'text-blue-600 font-medium' : ''}>
+                                                Compact view
+                                            </span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => toggleColumnSort(column.id)}>
+                                            {columnSortBy[column.id] === 'priority' && <Check className="w-4 h-4" />}
+                                            <span className={columnSortBy[column.id] === 'priority' ? 'text-blue-600 font-medium' : ''}>
+                                                Sort by priority
+                                            </span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onUpdateColumn(column.id, { isDone: !column.isDone })}>
+                                            {column.isDone && <Check className="w-4 h-4" />}
+                                            <span className={column.isDone ? 'text-blue-600 font-medium' : ''}>
+                                                Cards as completed
+                                            </span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <div className="px-2 py-2">
+                                            <div className="text-xs text-gray-600 mb-2">Column color:</div>
+                                            <div className="grid grid-cols-5 gap-1">
+                                                {availableColors.map(color => (
                                                     <button
-                                                        onClick={() => {
-                                                            onDeleteColumn(column.id);
-                                                            setOpenOptionsMenu(null);
-                                                        }}
-                                                        className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                        Delete column
-                                                    </button>
-                                                </>
-                                            )}
+                                                        key={color}
+                                                        onClick={() => onUpdateColumn(column.id, { color })}
+                                                        className={`w-6 h-6 rounded ${color} border-2 ${column.color === color ? 'border-blue-600' : 'border-gray-300'}`}
+                                                    />
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={() => onAddColumnAtPosition(column.id, 'left')}>
+                                            <ChevronLeftSquare />
+                                            Add on left
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onAddColumnAtPosition(column.id, 'right')}>
+                                            <ChevronRightSquare />
+                                            Add on right
+                                        </DropdownMenuItem>
+                                        {columnsState.length > 1 && (
+                                            <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem 
+                                                    onClick={() => onDeleteColumn(column.id)}
+                                                    className="text-red-600"
+                                                >
+                                                    <X />
+                                                    Delete column
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
                     </div>

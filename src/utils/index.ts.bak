@@ -1,0 +1,295 @@
+export const truncateText = (text: string, max = 60) => {
+    if (!text) return '';
+    return text.length > max ? text.slice(0, max - 1) + '…' : text;
+};
+
+export const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    return { daysInMonth, startingDayOfWeek, year, month };
+};
+
+export const getWeekDays = (date: Date) => {
+    const start = new Date(date);
+    // week starts Monday
+    const day = start.getDay();
+    const diffToMonday = (day + 6) % 7;
+    start.setDate(start.getDate() - diffToMonday);
+    const days = [] as Date[];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        days.push(d);
+    }
+    return days;
+};
+
+const prioritiesMapping = {
+    very_high: { id: 'very_high', label: 'Very High', color: 'border-red-500' },
+    high: { id: 'high', label: 'High', color: 'border-orange-500' },
+    medium: { id: 'medium', label: 'Medium', color: 'border-yellow-500' },
+    low: { id: 'low', label: 'Low', color: 'border-green-500' },
+    very_low: { id: 'very_low', label: 'Very Low', color: 'border-gray-500' }
+};
+
+export const priorityColors = (priority: string) => {
+    let colorClass = `border-l-4 ${prioritiesMapping[priority]?.color || 'border-yellow-500'}`;
+    return colorClass;
+};
+
+export const availableColors = [
+    'bg-slate-100', 'bg-blue-50', 'bg-green-50', 'bg-purple-50',
+    'bg-pink-50', 'bg-yellow-50', 'bg-red-50', 'bg-orange-50',
+    'bg-indigo-50', 'bg-cyan-50'
+];
+
+export const availablePriorities = (priority: string) => {
+    return prioritiesMapping[priority]?.label || 'Medium';
+};
+
+// CSV Export/Import utilities
+export const convertTasksToCSV = (tasks: any[], columns: any[], settings?: any, viewMode?: string, splitRatio?: number) => {
+    // CSV headers - added MetaData column at the end
+    const headers = [
+        'ID',
+        'Title',
+        'Column',
+        'Column Title',
+        'Scheduled',
+        'Deadline',
+        'Priority',
+        'Tags',
+        'Description',
+        'Order',
+        'MetaData'
+    ];
+
+    // Helper function to escape CSV fields
+    const escapeCSVField = (field: any) => {
+        if (field === null || field === undefined) return '';
+        const str = String(field);
+        // Escape backslashes first, then quotes, newlines, and carriage returns
+        const escaped = str
+            .replace(/\\/g, '\\\\')    // \ -> \\
+            .replace(/"/g, '\\"')      // " -> \"
+            .replace(/\n/g, '\\n')     // newline -> \n
+            .replace(/\r/g, '\\r');    // carriage return -> \r
+        // Always wrap in quotes if contains comma, quote, newline, or backslash
+        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\\')) {
+            return `"${escaped}"`;
+        }
+        return escaped;
+    };
+
+    // Build CSV rows
+    const rows = tasks.map((task, index) => {
+        const column = columns.find(c => c.id === task.column);
+        const rowData = [
+            task.id,
+            escapeCSVField(task.title),
+            task.column,
+            escapeCSVField(column?.title || ''),
+            task.scheduled || '',
+            task.deadline || '',
+            task.priority || '',
+            escapeCSVField(task.tags),
+            escapeCSVField(task.description),
+            task.order ?? ''
+        ];
+
+        // Add metadata only in the first row
+        if (index === 0) {
+            const metadata = {
+                columns,
+                settings,
+                viewMode,
+                splitRatio,
+                exportDate: new Date().toISOString()
+            };
+            rowData.push(escapeCSVField(JSON.stringify(metadata)));
+        } else {
+            rowData.push('');
+        }
+
+        return rowData.join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+};
+
+export const parseCSVToTasks = (csvContent: string) => {
+    const lines = [];
+    let currentLine = '';
+    let insideQuotes = false;
+
+    // Parse CSV properly handling quoted fields with newlines
+    for (let i = 0; i < csvContent.length; i++) {
+        const char = csvContent[i];
+        
+        if (char === '"') {
+            if (insideQuotes && csvContent[i + 1] === '"') {
+                // Escaped quote
+                currentLine += '"';
+                i++; // Skip next quote
+            } else {
+                // Toggle quote state
+                insideQuotes = !insideQuotes;
+            }
+        } else if (char === '\n' && !insideQuotes) {
+            // Remove trailing \r if present (Windows line endings)
+            if (currentLine.endsWith('\r')) {
+                currentLine = currentLine.slice(0, -1);
+            }
+            if (currentLine.trim()) {
+                lines.push(currentLine);
+            }
+            currentLine = '';
+        } else if (char === '\r') {
+            // Skip \r characters - we handle them when we find \n
+            continue;
+        } else {
+            currentLine += char;
+        }
+    }
+    
+    // Add last line if exists
+    if (currentLine.trim()) {
+        lines.push(currentLine);
+    }
+
+    if (lines.length < 2) {
+        throw new Error('Invalid CSV format: file is empty or has no data rows');
+    }
+
+    // Parse header
+    const headers = parseCSVLine(lines[0]);
+    
+    // Validate required headers
+    const requiredHeaders = ['ID', 'Title', 'Column'];
+    const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+    if (missingHeaders.length > 0) {
+        throw new Error(`Missing required headers: ${missingHeaders.join(', ')}`);
+    }
+
+    // Check if MetaData column exists
+    const metadataIndex = headers.indexOf('MetaData');
+    let metadata: any = null;
+
+    // Parse data rows
+    const tasks = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length === 0) continue; // Skip empty lines
+
+        // Extract metadata from first row if available
+        if (i === 1 && metadataIndex !== -1 && values[metadataIndex]) {
+            try {
+                metadata = JSON.parse(values[metadataIndex]);
+            } catch (e) {
+                console.warn('Failed to parse metadata from CSV:', e);
+            }
+        }
+
+        const task: any = {};
+        headers.forEach((header, index) => {
+            const value = values[index] || '';
+            
+            switch (header) {
+                case 'ID':
+                    task.id = parseInt(value) || Date.now() + i;
+                    break;
+                case 'Title':
+                    task.title = value;
+                    break;
+                case 'Column':
+                    task.column = value || 'todo';
+                    break;
+                case 'Scheduled':
+                    task.scheduled = value || null;
+                    break;
+                case 'Deadline':
+                    task.deadline = value || null;
+                    break;
+                case 'Priority':
+                    task.priority = value || 'medium';
+                    break;
+                case 'Tags':
+                    task.tags = value || '';
+                    break;
+                case 'Description':
+                    task.description = value || '';
+                    break;
+                case 'Order':
+                    task.order = parseInt(value) || 0;
+                    break;
+                // MetaData is not assigned to task
+            }
+        });
+
+        // Validate required fields
+        if (!task.title) {
+            console.warn(`Skipping row ${i + 1}: missing title`);
+            continue;
+        }
+
+// Helper function to parse a single CSV line
+const parseCSVLine = (line: string): string[] => {
+    const result = [];
+    let current = '';
+    let insideQuotes = false;
+    let i = 0;
+
+    while (i < line.length) {
+        const char = line[i];
+
+        if (char === '\\' && insideQuotes && i + 1 < line.length) {
+            // Escape sequence inside quotes
+            const nextChar = line[i + 1];
+            if (nextChar === '\\') {
+                current += '\\';
+                i += 2;
+            } else if (nextChar === '"') {
+                current += '"';
+                i += 2;
+            } else if (nextChar === 'n') {
+                current += '\n';
+                i += 2;
+            } else if (nextChar === 'r') {
+                current += '\r';
+                i += 2;
+            } else {
+                current += char;
+                i++;
+            }
+        } else if (char === '"') {
+            // Toggle quote state
+            insideQuotes = !insideQuotes;
+            i++;
+        } else if (char === ',' && !insideQuotes) {
+            // End of field
+            result.push(current);
+            current = '';
+            i++;
+        } else {
+            // Regular character
+            current += char;
+            i++;
+        }
+    }
+
+    // Add last field
+    result.push(current);
+
+    console.log(`parseCSVLine: parsed ${result.length} fields from line of length ${line.length}`);
+    return result;
+};  }
+
+    // Add last field
+    result.push(current);
+
+    return result;
+};    

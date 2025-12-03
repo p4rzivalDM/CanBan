@@ -5,7 +5,6 @@
 ### Features
 Planned:
 - [ ] Folder/project view switcher (each folder has its own cards and calendar, switchable without exiting)
-- [ ] CSV export / import
 - [ ] Click day in Month view to open Day view
 - [ ] Dynamic tab icon color
 - [ ] Task duration (auto blocks 7h/day; queue overlaps by Kanban order)
@@ -23,6 +22,7 @@ Planned:
 - [ ] Auto-priority setting based on due date (optional setting that automatically adjusts priority based on deadline proximity; updates on reload/save/edit)
 
 Implemented:
+- [x] CSV export / import
 - [x] Split / single view transitions
 - [x] Auto mode switching via divider drag
 - [x] Settings modal (divider limits)

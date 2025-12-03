@@ -49,4 +49,188 @@ export const availableColors = [
 
 export const availablePriorities = (priority: string) => {
     return prioritiesMapping[priority]?.label || 'Medium';
-};    
+};
+import Papa from 'papaparse';
+
+// CSV Export/Import utilities
+export const convertTasksToCSV = (tasks: any[], columns: any[], settings?: any, viewMode?: string, splitRatio?: number) => {
+    // CSV headers - added MetaData column at the end
+    const headers = [
+        'ID',
+        'Title',
+        'Column',
+        'Column Title',
+        'Scheduled',
+        'Deadline',
+        'Priority',
+        'Tags',
+        'Description',
+        'Order',
+        'MetaData'
+    ];
+
+    // Helper function to escape CSV fields (RFC4180):
+    // - Wrap in double quotes if field contains comma, quote, or newline
+    // - Escape internal quotes by doubling them
+    const escapeCSVField = (field: any) => {
+        if (field === null || field === undefined) return '';
+        const str = String(field);
+        const needsQuoting = /[",\n\r]/.test(str);
+        if (!needsQuoting) return str;
+        return '"' + str.replace(/"/g, '""') + '"';
+    };
+
+    // Build CSV rows
+    const rows = tasks.map((task, index) => {
+        const column = columns.find(c => c.id === task.column);
+        const rowData = [
+            task.id,
+            escapeCSVField(task.title),
+            task.column,
+            escapeCSVField(column?.title || ''),
+            task.scheduled || '',
+            task.deadline || '',
+            task.priority || '',
+            escapeCSVField(task.tags),
+            escapeCSVField(task.description),
+            task.order ?? ''
+        ];
+
+        // Add metadata only in the first row
+        if (index === 0) {
+            const metadata = {
+                columns,
+                settings,
+                viewMode,
+                splitRatio,
+                exportDate: new Date().toISOString()
+            };
+            // Stringify and let escapeCSVField handle quotes by doubling
+            rowData.push(escapeCSVField(JSON.stringify(metadata)));
+        } else {
+            rowData.push('');
+        }
+
+        return rowData.join(',');
+    });
+
+    return [headers.join(','), ...rows].join('\n');
+};
+
+// Helper function to parse a single CSV line
+const parseCSVLine = (line: string): string[] => {
+    const result = [];
+    let current = '';
+    let insideQuotes = false;
+    let i = 0;
+
+    while (i < line.length) {
+        const char = line[i];
+        const nextChar = i + 1 < line.length ? line[i + 1] : null;
+
+        if (!insideQuotes) {
+            // Outside quotes
+            if (char === '"') {
+                // Start of quoted field
+                insideQuotes = true;
+                i++;
+            } else if (char === ',') {
+                // Field separator
+                result.push(current);
+                current = '';
+                i++;
+            } else {
+                // Regular character in unquoted field
+                current += char;
+                i++;
+            }
+        } else {
+            // Inside quotes - prioritize double-quote escape
+            if (char === '"' && nextChar === '"') {
+                // Double quote escape: "" -> "
+                current += '"';
+                i += 2;
+            } else if (char === '"') {
+                // End of quoted field
+                insideQuotes = false;
+                i++;
+            } else if (char === '\\' && nextChar) {
+                // Backslash escape sequences
+                if (nextChar === '\\') {
+                    current += '\\';
+                    i += 2;
+                } else if (nextChar === '"') {
+                    current += '"';
+                    i += 2;
+                } else if (nextChar === 'n') {
+                    current += '\n';
+                    i += 2;
+                } else if (nextChar === 'r') {
+                    current += '\r';
+                    i += 2;
+                } else {
+                    // Unknown escape - keep backslash
+                    current += char;
+                    i++;
+                }
+            } else {
+                // Regular character inside quotes
+                current += char;
+                i++;
+            }
+        }
+    }
+
+    // Add last field
+    result.push(current);
+
+    return result;
+};
+
+// Robust CSV parsing via PapaParse
+export const parseCSVToTasks = (csvContent: string) => {
+    const parsed = Papa.parse(csvContent, {
+        header: true,
+        skipEmptyLines: true,
+        // Let PapaParse auto-detect newline and quote/escape style
+    });
+
+    if (parsed.errors && parsed.errors.length > 0) {
+        const firstErr = parsed.errors[0];
+        throw new Error(`CSV parse error at row ${firstErr.row}: ${firstErr.message}`);
+    }
+
+    const rows = parsed.data as any[];
+    const tasks = [] as any[];
+    let metadata: any = null;
+
+    rows.forEach((row, idx) => {
+        // Read metadata from first data row
+        if (idx === 0 && row.MetaData) {
+            try {
+                metadata = JSON.parse(row.MetaData);
+            } catch (e) {
+                console.warn('Could not parse metadata from CSV - file may be in old format');
+            }
+        }
+
+        // Build task from row
+        const task: any = {
+            id: row.ID ? parseInt(row.ID) : Date.now() + idx,
+            title: row.Title || '',
+            column: row.Column || 'todo',
+            scheduled: row.Scheduled || null,
+            deadline: row.Deadline || null,
+            priority: row.Priority || 'medium',
+            tags: row.Tags || '',
+            description: row.Description || '',
+            order: row.Order ? parseInt(row.Order) : 0,
+        };
+
+        if (task.title) {
+            tasks.push(task);
+        }
+    });
+
+    return { tasks, metadata };
+};

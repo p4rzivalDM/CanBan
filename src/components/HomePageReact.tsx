@@ -7,7 +7,9 @@ import CalendarView from './CalendarView';
 import ViewSkeleton from './ViewSkeleton';
 import SettingsModal from './SettingsModal';
 import { Spinner } from './ui/spinner';
+import { convertTasksToCSV, parseCSVToTasks } from '../utils';
 import '../styles/transitions.css';
+import { toast, Toaster } from 'sonner';
 
 const DevTaskManager = () => {
     // Durata del loading iniziale (in ms) - modifica questo valore per cambiare velocemente
@@ -415,7 +417,16 @@ const DevTaskManager = () => {
     }, []);
 
     // Funzioni di importazione e esportazione
-    const exportData = () => {
+    // Helper per messaggi di conferma import
+    const buildImportConfirmMessage = (tasksCount: number, columnsCount: number, format: string) => {
+        return (
+            `Found ${tasksCount} tasks and ${columnsCount} columns in ${format}.\n\n` +
+            `OK = Import and replace current data\n` +
+            `Cancel = Abort import`
+        );
+    };
+
+    const exportToJSON = () => {
         // Determine splitRatio based on viewMode
         let exportSplitRatio = splitRatio;
         if (viewMode === 'calendar') {
@@ -444,46 +455,93 @@ const DevTaskManager = () => {
         URL.revokeObjectURL(url);
     };
 
-    const importData = (event) => {
+    const importDataUnified = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        const ext = file.name.split('.').pop()?.toLowerCase();
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const content = e.target?.result as string;
-                const data = JSON.parse(content);
-
-                if (data.tasks && Array.isArray(data.tasks) && data.columns && Array.isArray(data.columns)) {
-                    // Import core data
-                    setTasks(data.tasks);
-                    setColumnsState(data.columns);
-                    pushSnapshot(data.tasks, data.columns);
-                    
-                    // Import settings if available
-                    if (data.settings) {
-                        setSettings(data.settings);
+                if (ext === 'json') {
+                    const data = JSON.parse(content);
+                    if (data.tasks && Array.isArray(data.tasks) && data.columns && Array.isArray(data.columns)) {
+                        const tasksCount = data.tasks.length;
+                        const columnsCount = data.columns.length;
+                        const proceed = confirm(buildImportConfirmMessage(tasksCount, columnsCount, 'JSON'));
+                        if (!proceed) {
+                            return;
+                        }
+                        setTasks(data.tasks);
+                        setColumnsState(data.columns);
+                        pushSnapshot(data.tasks, data.columns);
+                        if (data.settings) setSettings(data.settings);
+                        if (data.viewMode) setViewMode(data.viewMode);
+                        if (typeof data.splitRatio === 'number') setSplitRatio(data.splitRatio);
+                        toast.success(`Imported ${tasksCount} tasks and ${columnsCount} columns from JSON`);
+                    } else {
+                        toast.error('Invalid JSON format. Please use a file exported from CanBan.');
                     }
-                    
-                    // Import view mode and split ratio if available
-                    if (data.viewMode) {
-                        setViewMode(data.viewMode);
+                } else if (ext === 'csv') {
+                    const result = parseCSVToTasks(content);
+                    if (result.tasks && result.tasks.length > 0) {
+                        // Determine columns to use: from metadata if available, otherwise current columns
+                        const columnsToUse = result.metadata?.columns || columnsState;
+                        const uniqueColumns = new Set(result.tasks.map(t => t.column));
+                        const columnsCount = uniqueColumns.size;
+                        
+                        const proceed = confirm(buildImportConfirmMessage(result.tasks.length, columnsCount, 'CSV'));
+                        if (!proceed) {
+                            return;
+                        }
+                        
+                        setTasks(result.tasks);
+                        setColumnsState(columnsToUse);
+                        pushSnapshot(result.tasks, columnsToUse);
+                        
+                        // Restore settings, viewMode and splitRatio if available in metadata
+                        if (result.metadata) {
+                            if (result.metadata.settings) setSettings(result.metadata.settings);
+                            if (result.metadata.viewMode) setViewMode(result.metadata.viewMode);
+                            if (typeof result.metadata.splitRatio === 'number') setSplitRatio(result.metadata.splitRatio);
+                        }
+                        
+                        toast.success(`Imported ${result.tasks.length} tasks and ${columnsCount} columns from CSV`);
+                    } else {
+                        toast.error('No valid tasks found in CSV file.');
                     }
-                    if (typeof data.splitRatio === 'number') {
-                        setSplitRatio(data.splitRatio);
-                    }
-                    
-                    alert('Data imported successfully!');
                 } else {
-                    alert('Invalid file format. Please use a file exported from CanBan.');
+                    toast.error('Unsupported file format. Please select a .json or .csv file.');
                 }
             } catch (error) {
-                alert('Error importing file. Please make sure the file is a valid JSON.');
+                const msg = error instanceof Error ? error.message : 'Unknown error';
+                toast.error(`Import error: ${msg}`);
             }
         };
         reader.readAsText(file);
-        // Reset input
         event.target.value = '';
+    };
+
+    const exportToCSV = () => {
+        // Determine splitRatio based on viewMode
+        let exportSplitRatio = splitRatio;
+        if (viewMode === 'calendar') {
+            exportSplitRatio = 0;
+        } else if (viewMode === 'kanban') {
+            exportSplitRatio = 100;
+        }
+
+        const csvContent = convertTasksToCSV(tasks, columnsState, settings, viewMode, exportSplitRatio);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `canban_tasks_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     // getWeekDays imported from utils (week starts Monday)
@@ -553,8 +611,9 @@ const DevTaskManager = () => {
                             'both'
                         ) : null}
                         setViewMode={setViewMode}
-                        exportData={exportData}
-                        importData={importData}
+                        exportToJSON={exportToJSON}
+                        importDataUnified={importDataUnified}
+                        exportToCSV={exportToCSV}
                         undo={undo}
                         redo={redo}
                         historyState={historyState}
@@ -717,6 +776,7 @@ const DevTaskManager = () => {
                         isOpen={isSettingsOpen}
                         onOpenChange={setIsSettingsOpen}
                     />
+                    <Toaster richColors position="top-center" />
                 </>
             )}
         </div>

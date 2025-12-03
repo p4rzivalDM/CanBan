@@ -82,5 +82,11 @@
       "isDone": true
     }
   ],
-  "exportDate": "2025-11-15T18:13:49.733Z"
+  "settings": {
+    "dividerLeftLimit": 20,
+    "dividerRightLimit": 80
+  },
+  "viewMode": "both",
+  "splitRatio": 50,
+  "exportDate": "2025-12-03T22:46:09.590Z"
 }
