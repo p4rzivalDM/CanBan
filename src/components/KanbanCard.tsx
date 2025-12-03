@@ -56,18 +56,22 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         >
             <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2'} ${compact ? '-mt-0.5' : '-mt-1'}`}>
                 <div className="flex items-center gap-2 flex-1">
-                    <GripVertical className="text-gray-400 mt-1 shrink-0 cursor-move w-4 h-4" />
+                    <span title="Drag to reorder">
+                        <GripVertical className="text-gray-400 mt-1 shrink-0 cursor-move w-4 h-4" />
+                    </span>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm mt-1 font-semibold text-gray-900 wrap-break-word w-7/8">{truncateText(task.title, compact ? 35 : 45)}</p>
                     </div>
                 </div>
-                <X
-                    className="w-4 h-4 text-gray-400 hover:text-red-500 transition-colors ml-2 shrink-0"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteTask(task.id);
-                    }}
-                />
+                <span title="Delete task">
+                    <X
+                        className="w-4 h-4 text-gray-400 hover:text-red-500 transition-colors ml-2 shrink-0 cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteTask(task.id);
+                        }}
+                    />
+                </span>
             </div>
             {(!compact && task.description) && (
                 <div className="mb-2 w-full overflow-hidden" data-color-mode="light">

@@ -28,6 +28,7 @@ const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, import
                     onClick={() => setViewMode('calendar')}
                     variant={(previewMode || viewMode) === 'calendar' ? 'default' : 'outline'}
                     className="view-mode-button"
+                    title="Calendar view"
                 >
                     <CalendarDays />
                 </Button>
@@ -43,6 +44,7 @@ const HeaderControls = ({ viewMode, previewMode, setViewMode, exportData, import
                     onClick={() => setViewMode('kanban')}
                     variant={(previewMode || viewMode) === 'kanban' ? 'default' : 'outline'}
                     className="view-mode-button"
+                    title="Kanban view"
                 >
                     <Dog />
                 </Button>

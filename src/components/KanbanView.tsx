@@ -189,6 +189,30 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         setDraggedColumn(null);
     };
 
+    const handleQuickAddTask = (column) => {
+        if (newTaskForm.title.trim()) {
+            const tasksInColumn = tasks.filter(t => t.column === column.id);
+            const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
+            
+            const newTask = {
+                id: Date.now().toString(),
+                title: newTaskForm.title,
+                priority: 'medium',
+                column: column.id,
+                order: maxOrder + 1,
+                scheduled: null
+            };
+            
+            // Add task directly through update callback
+            if (onUpdateTask) {
+                onUpdateTask(newTask.id, newTask);
+            }
+            
+            setNewTaskColumn(null);
+            setNewTaskForm({ title: '' });
+        }
+    };
+
     const handleContinueNewTask = (column) => {
         if (newTaskForm.title.trim()) {
             const newTask = {
@@ -251,7 +275,9 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 />
                             ) : (
                                 <div className="flex items-center gap-2 flex-1">
-                                    <GripVertical className="w-5 h-5 text-gray-400" />
+                                    <span title="Drag to reorder column">
+                                        <GripVertical className="w-5 h-5 text-gray-400" />
+                                    </span>
                                     <h3
                                         className="font-bold text-gray-800 text-lg cursor-pointer hover:text-blue-600"
                                         onClick={() => setEditingColumn(column.id)}
@@ -266,7 +292,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                             <div className="flex gap-1">
                                 <Button
                                     onClick={() => setNewTaskColumn(column.id)}
-                                    title="Add task"
+                                    title="Quick add task"
                                     size="icon"
                                     variant="ghost"
                                 >
@@ -283,7 +309,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                         }}
                                         size="icon"
                                         variant="ghost"
-                                        title="Options"
+                                        title="Column options"
                                     >
                                         <MoreVertical />
                                     </Button>
@@ -402,21 +428,22 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                         setNewTaskForm({ title: '' });
                                     }}
                                     variant="destructive"
+                                    size="sm"
                                 >
                                     Cancel
                                 </Button>
                                 <Button
-                                    onClick={() => {
-                                        setNewTaskColumn(null);
-                                        setNewTaskForm({ title: '' });
-                                    }}
+                                    onClick={() => handleQuickAddTask(column)}
                                     variant="outline"
+                                    title="Add task without opening modal"
+                                    size="sm"
                                 >
                                     <Plus />
                                 </Button>
                                 <Button
                                     onClick={() => handleContinueNewTask(column)}
                                     variant="default"
+                                    size="sm"
                                 >
                                     Continue
                                 </Button>

@@ -192,7 +192,17 @@ const DevTaskManager = () => {
     };
 
     const updateTask = (taskId, updates) => {
-        const newTasks = tasks.map(t => t.id === taskId ? { ...t, ...updates } : t);
+        const existingTask = tasks.find(t => t.id === taskId);
+        let newTasks;
+        
+        if (existingTask) {
+            // Update existing task
+            newTasks = tasks.map(t => t.id === taskId ? { ...t, ...updates } : t);
+        } else {
+            // Add new task
+            newTasks = [...tasks, { id: taskId, ...updates }];
+        }
+        
         setTasks(newTasks);
         pushSnapshot(newTasks, columnsState);
     };
