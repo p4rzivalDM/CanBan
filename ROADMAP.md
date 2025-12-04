@@ -4,6 +4,7 @@
 
 ### Features
 Planned:
+- [ ] Archive cards functionality (instead of deleting, cards can be archived; each column has a "hide archived cards" option enabled by default; when disabled, archived cards are visible with a visual indicator)
 - [ ] Folder/project view switcher (each folder has its own cards and calendar, switchable without exiting)
 - [ ] Click day in Month view to open Day view
 - [ ] Dynamic tab icon color
