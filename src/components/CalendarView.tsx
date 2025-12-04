@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, UndoDot } from 'lucide-react';
 import { truncateText, getDaysInMonth, getWeekDays, priorityColors } from '../utils';
 import { Button } from './ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface CalendarViewProps {
     tasks: any[];
@@ -74,7 +75,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 Day
             </Button>
             {showToday && onToday && (
-                <Button onClick={onToday} size="sm" title="Return to Today"><UndoDot /></Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button onClick={onToday} size="sm"><UndoDot /></Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Return to Today</TooltipContent>
+                </Tooltip>
             )}
         </div>
     );

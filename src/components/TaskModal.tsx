@@ -4,7 +4,8 @@ import { Input } from './ui/input';
 import { MarkdownEditor } from './ui/markdown-editor';
 import { Field, FieldLabel } from './ui/field';
 import TagInput from './ui/tags';
-import { Trash } from 'lucide-react';
+import { Info, Trash } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { DateTime } from './ui/date-time';
 
@@ -105,7 +106,21 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete, suggestions,
                             />
                         </Field>
                         <Field>
-                            <FieldLabel htmlFor="tags">Tags</FieldLabel>
+                            <FieldLabel htmlFor="tags" className="flex items-center gap-2">
+                                <span>Tags</span>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span role="button" tabIndex={0} className="inline-flex">
+                                                <Info className="h-4 w-4 text-gray-400" />
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            Clic destro sul campo Tags per vedere i suggerimenti
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </FieldLabel>
                             <TagInput
                                 id="tags"
                                 value={editingForm?.tags || ''}

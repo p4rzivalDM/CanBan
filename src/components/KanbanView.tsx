@@ -11,6 +11,7 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from './ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 interface KanbanViewProps {
     columnsState: any[];
@@ -281,9 +282,14 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 />
                             ) : (
                                 <div className="flex items-center gap-2 flex-1">
-                                    <span title="Drag to reorder column">
-                                        <GripVertical className="w-5 h-5 text-gray-400" />
-                                    </span>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span>
+                                                <GripVertical className="w-5 h-5 text-gray-400" />
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Drag to reorder column</TooltipContent>
+                                    </Tooltip>
                                     <h3
                                         className="font-bold text-gray-800 text-lg cursor-pointer hover:text-blue-600"
                                         onClick={() => setEditingColumn(column.id)}
@@ -296,24 +302,32 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 </div>
                             )}
                             <div className="flex gap-1">
-                                <Button
-                                    onClick={() => setNewTaskColumn(column.id)}
-                                    title="Quick add task"
-                                    size="icon"
-                                    variant="ghost"
-                                >
-                                    <Plus />
-                                </Button>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
                                         <Button
+                                            onClick={() => setNewTaskColumn(column.id)}
                                             size="icon"
                                             variant="ghost"
-                                            title="Column options"
                                         >
-                                            <MoreVertical />
+                                            <Plus />
                                         </Button>
-                                    </DropdownMenuTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Quick add task</TooltipContent>
+                                </Tooltip>
+                                <DropdownMenu>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                >
+                                                    <MoreVertical />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Column options</TooltipContent>
+                                    </Tooltip>
                                     <DropdownMenuContent align="end" className="w-[200px]">
                                         <DropdownMenuItem onClick={() => toggleCompactView(column.id)}>
                                             {compactColumns?.[column.id] && <Check className="w-4 h-4" />}
@@ -402,14 +416,18 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 >
                                     Cancel
                                 </Button>
-                                <Button
-                                    onClick={() => handleQuickAddTask(column)}
-                                    variant="outline"
-                                    title="Add task without opening modal"
-                                    size="sm"
-                                >
-                                    <Plus />
-                                </Button>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            onClick={() => handleQuickAddTask(column)}
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            <Plus />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Add task without opening modal</TooltipContent>
+                                </Tooltip>
                                 <Button
                                     onClick={() => handleContinueNewTask(column)}
                                     variant="default"
