@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { GripVertical } from 'lucide-react';
 import HeaderControls from './HeaderControls';
+import SplitDivider from './SplitDivider';
 import TaskModal from './TaskModal';
 import KanbanView from './KanbanView';
 import CalendarView from './CalendarView';
@@ -662,22 +662,11 @@ const DevTaskManager = () => {
                                 </div>
 
                                 {/* Divider hover per tornare a split view */}
-                                <div
-                                    className="w-8 flex items-center justify-center px-2 hover:bg-gray-100 relative group"
+                                <SplitDivider
+                                    isDragging={isDragging && dragMode === 'from-kanban'}
+                                    splitRatio={splitRatio}
                                     onMouseDown={handleMouseDown}
-                                >
-                                    {isDragging && dragMode === 'from-kanban' ? (
-                                        <div className="text-sm font-bold text-gray-700" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
-                                            {(splitRatio).toFixed(1)}%
-                                        </div>
-                                    ) : (
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center cursor-col-resize">
-                                                <GripVertical className="w-3 h-3 text-white" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                />
 
                                 {/* Vista fantasma del calendar - skeleton finché non raggiungi il limite destro */}
                                 <div className="overflow-auto" style={{ width: isDragging && dragMode === 'from-kanban' ? `${100 - splitRatio}%` : '0%' }}>
@@ -706,22 +695,11 @@ const DevTaskManager = () => {
                                 </div>
 
                                 {/* Divider hover per tornare a split view */}
-                                <div
-                                    className="w-8 flex items-center justify-center px-2 hover:bg-gray-100 relative group"
+                                <SplitDivider
+                                    isDragging={isDragging && dragMode === 'from-calendar'}
+                                    splitRatio={splitRatio}
                                     onMouseDown={handleMouseDown}
-                                >
-                                    {isDragging && dragMode === 'from-calendar' ? (
-                                        <div className="text-sm font-bold text-gray-700" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
-                                            {(splitRatio).toFixed(1)}%
-                                        </div>
-                                    ) : (
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center cursor-col-resize">
-                                                <GripVertical className="w-3 h-3 text-white" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                />
 
                                 <div className="overflow-auto" style={{ width: isDragging && dragMode === 'from-calendar' ? `${100 - splitRatio}%` : '100%' }}>
                                     {splitRatio > DIVIDER_RIGHT_LIMIT ? (
@@ -743,26 +721,12 @@ const DevTaskManager = () => {
                                     )}
                                 </div>
 
-                                <div
-                                    className="w-8 flex items-center justify-center px-2 hover:bg-gray-100 relative group"
+                                <SplitDivider
+                                    isDragging={isDragging}
+                                    isSnapAnimating={isSnapAnimating}
+                                    splitRatio={splitRatio}
                                     onMouseDown={handleMouseDown}
-                                >
-                                    {isDragging ? (
-                                        <div className="text-sm font-bold text-gray-700" style={{ transform: 'rotate(-90deg)', whiteSpace: 'nowrap' }}>
-                                            {(splitRatio).toFixed(1)}%
-                                        </div>
-                                    ) : (
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <div className={`w-3 h-7 bg-gray-400 hover:bg-black rounded-full flex items-center justify-center transition-colors ${isSnapAnimating ? 'divider-snap' : ''}`}
-                                                style={isSnapAnimating ? {
-                                                    '--snap-distance': splitRatio < 50 ? '-100px' : '100px'
-                                                } as React.CSSProperties : {}}
-                                            >
-                                                <GripVertical className="w-3 h-3 text-white" />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                />
 
                                 <div className="overflow-auto" style={{ width: `${100 - splitRatio}%` }}>
                                     {splitRatio > DIVIDER_RIGHT_LIMIT ? (
