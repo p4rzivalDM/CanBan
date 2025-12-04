@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { GripVertical } from 'lucide-react';
 import HeaderControls from './HeaderControls';
 import TaskModal from './TaskModal';
@@ -25,7 +25,8 @@ const DevTaskManager = () => {
         }
         return {
             dividerLeftLimit: 12,
-            dividerRightLimit: 88
+            dividerRightLimit: 88,
+            tagSuggestions: [] as string[]
         };
     });
 
@@ -595,6 +596,35 @@ const DevTaskManager = () => {
         />
     );
 
+    // Compute unique tag suggestions from saved tasks
+    const tagSuggestions = useMemo(() => {
+        const set = new Set<string>(Array.isArray(settings.tagSuggestions) ? settings.tagSuggestions : []);
+        tasks.forEach(t => {
+            const raw = Array.isArray(t.tags) ? t.tags.join(' ') : (t.tags || '');
+            raw.split(/\s+/).forEach(x => {
+                const cleaned = String(x || '').trim().replace(/^#/, '');
+                if (cleaned) set.add(cleaned);
+            });
+        });
+        return Array.from(set).sort((a, b) => a.localeCompare(b));
+    }, [tasks, settings.tagSuggestions]);
+
+    // Persist suggestions into settings when tasks change
+    useEffect(() => {
+        const current = tagSuggestions;
+        setSettings(prev => {
+            const prevList = Array.isArray(prev.tagSuggestions) ? prev.tagSuggestions : [];
+            const same = prevList.length === current.length && prevList.every((x, i) => x === current[i]);
+            if (same) return prev;
+            const next = { ...prev, tagSuggestions: current };
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('canban_settings', JSON.stringify(next));
+            }
+            return next;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tagSuggestions]);
+
     return (
         <div className="h-screen bg-linear-to-br from-slate-50 to-slate-100 p-6 flex flex-col">
             {!isLoaded ? (
@@ -744,7 +774,6 @@ const DevTaskManager = () => {
                             </div>
                         )}
                     </div>
-
                     <TaskModal
                         viewingTask={viewingTask}
                         setViewingTask={setViewingTask}
@@ -768,8 +797,9 @@ const DevTaskManager = () => {
                         onDelete={(id) => {
                             deleteTask(id);
                         }}
+                        suggestions={tagSuggestions}
+                        allTasks={tasks}
                     />
-
                     <SettingsModal
                         settings={settings}
                         onSettingsChange={setSettings}

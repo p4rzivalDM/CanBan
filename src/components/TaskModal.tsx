@@ -8,7 +8,7 @@ import { Trash } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { DateTime } from './ui/date-time';
 
-const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
+const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete, suggestions, allTasks }) => {
     const [editingForm, setEditingForm] = useState(viewingTask || null);
 
     useEffect(() => {
@@ -111,6 +111,28 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete }) => {
                                 value={editingForm?.tags || ''}
                                 onChange={(v) => handleChange('tags')({ target: { value: v } })}
                                 placeholder="Add tags"
+                                suggestions={(function () {
+                                    // Build suggestions from allTasks but replace current task's tags with editingForm tags
+                                    try {
+                                        const set = new Set<string>();
+                                        const currentId = viewingTask?.id;
+                                        const currentTags = Array.isArray(editingForm?.tags)
+                                            ? editingForm?.tags.join(' ')
+                                            : (editingForm?.tags || '');
+                                        (allTasks || []).forEach(t => {
+                                            const raw = (t.id === currentId)
+                                                ? currentTags
+                                                : (Array.isArray(t.tags) ? t.tags.join(' ') : (t.tags || ''));
+                                            raw.split(/\s+/).forEach(x => {
+                                                const cleaned = String(x || '').trim().replace(/^#/, '');
+                                                if (cleaned) set.add(cleaned);
+                                            });
+                                        });
+                                        return Array.from(set).sort((a, b) => a.localeCompare(b));
+                                    } catch {
+                                        return suggestions || [];
+                                    }
+                                })()}
                             />
                         </Field>
                     </div>
