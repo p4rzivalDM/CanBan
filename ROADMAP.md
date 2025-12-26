@@ -4,6 +4,7 @@
 
 ### Features
 Planned:
+- [ ] Hamburger menu for project switching and other functionality
 - [ ] Archive cards functionality (instead of deleting, cards can be archived; each column has a "hide archived cards" option enabled by default; when disabled, archived cards are visible with a visual indicator)
 - [ ] Folder/project view switcher (each folder has its own cards and calendar, switchable without exiting)
 - [ ] Click day in Month view to open Day view
@@ -23,6 +24,7 @@ Planned:
 - [ ] Auto-priority setting based on due date (optional setting that automatically adjusts priority based on deadline proximity; updates on reload/save/edit)
 
 Implemented:
+- [x] Make priority field optional
 - [x] CSV export / import
 - [x] Split / single view transitions
 - [x] Auto mode switching via divider drag

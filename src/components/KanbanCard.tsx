@@ -38,6 +38,11 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
             case 'very_low':
                 return <Minus className="w-3 h-3 text-gray-500" />;
             case 'medium':
+                return <CircleDot className="w-3 h-3 text-yellow-500" />;
+            case '':
+            case undefined:
+            case null:
+                return null;
             default:
                 return <CircleDot className="w-3 h-3 text-yellow-500" />;
         }

@@ -149,8 +149,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         const sortBy = columnSortBy[columnId];
 
         if (sortBy === 'priority') {
-            const priorityOrder = { very_high: 0, high: 1, medium: 2, low: 3, very_low: 4 };
-            return [...columnTasks].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+            const priorityOrder = { very_high: 0, high: 1, medium: 2, low: 3, very_low: 4, '': 5 };
+            return [...columnTasks].sort((a, b) => (priorityOrder[a.priority] || 5) - (priorityOrder[b.priority] || 5));
         }
 
         return [...columnTasks].sort((a, b) => a.order - b.order);
@@ -204,7 +204,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
             const newTask = {
                 id: Date.now().toString(),
                 title: newTaskForm.title,
-                priority: 'medium',
+                priority: '',
                 column: column.id,
                 order: maxOrder + 1,
                 scheduled: null
@@ -230,7 +230,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                 time: '09:00',
                 deadline: '',
                 deadline_time: '',
-                priority: 'medium',
+                priority: '',
                 tags: '',
                 description: '',
                 order: 0

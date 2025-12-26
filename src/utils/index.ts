@@ -37,7 +37,10 @@ const prioritiesMapping = {
 };
 
 export const priorityColors = (priority: string) => {
-    let colorClass = `border-l-4 ${prioritiesMapping[priority]?.color || 'border-yellow-500'}`;
+    if (!priority || priority === '') {
+        return 'border-l-4 border-gray-200';
+    }
+    let colorClass = `border-l-4 ${prioritiesMapping[priority]?.color || 'border-gray-200'}`;
     return colorClass;
 };
 
@@ -48,7 +51,10 @@ export const availableColors = [
 ];
 
 export const availablePriorities = (priority: string) => {
-    return prioritiesMapping[priority]?.label || 'Medium';
+    if (!priority || priority === '') {
+        return 'None';
+    }
+    return prioritiesMapping[priority]?.label || 'None';
 };
 import Papa from 'papaparse';
 
@@ -221,7 +227,7 @@ export const parseCSVToTasks = (csvContent: string) => {
             column: row.Column || 'todo',
             scheduled: row.Scheduled || null,
             deadline: row.Deadline || null,
-            priority: row.Priority || 'medium',
+            priority: row.Priority || '',
             tags: row.Tags || '',
             description: row.Description || '',
             order: row.Order ? parseInt(row.Order) : 0,

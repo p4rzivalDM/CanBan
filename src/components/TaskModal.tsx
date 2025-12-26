@@ -64,8 +64,12 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete, suggestions,
                         </Field>
                         <Field>
                             <FieldLabel>Priority</FieldLabel>
-                            <RadioGroup value={editingForm?.priority || 'medium'} onValueChange={(value) => handleChange('priority')({ target: { value } })}>
+                            <RadioGroup value={editingForm?.priority || ''} onValueChange={(value) => handleChange('priority')({ target: { value } })}>
                                 <div className="flex gap-4">
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="" id="none" />
+                                        <label htmlFor="none" className="cursor-pointer">None</label>
+                                    </div>
                                     <div className="flex items-center space-x-2">
                                         <RadioGroupItem value="very_high" id="very_high" />
                                         <label htmlFor="very_high" className="cursor-pointer">Very High</label>
