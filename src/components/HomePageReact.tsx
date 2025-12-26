@@ -48,7 +48,8 @@ const DevTaskManager = () => {
             priority: 'medium',
             tags: 'guide introduction',
             description: 'CanBan combines Kanban and Calendar. Cards are tasks; columns are workflow phases (To do, In progress, Done, Deleted). Each card shows icons for priority, Scheduled and Deadline. Continue with the next cards to learn all features.',
-            order: 0
+            order: 0,
+            archived: false
         },
         {
             id: 1,
@@ -59,7 +60,8 @@ const DevTaskManager = () => {
             priority: 'high',
             tags: 'create edit details',
             description: 'Use the + button in a column header to add a card. Click a card to open details: change title, description, priority, tags, Scheduled and Deadline. Save to apply; delete from the modal if no longer needed.',
-            order: 1
+            order: 1,
+            archived: false
         },
         {
             id: 2,
@@ -70,7 +72,8 @@ const DevTaskManager = () => {
             priority: 'medium',
             tags: 'drag drop columns compact sort',
             description: 'Drag cards to reorder or move between columns. Drag a column header to reorder columns. Click a column title to rename. In the ••• menu: Compact view, Sort by priority, Add left/right, Delete. Preferences are stored per column.',
-            order: 0
+            order: 0,
+            archived: false
         },
         {
             id: 3,
@@ -81,7 +84,8 @@ const DevTaskManager = () => {
             priority: 'low',
             tags: 'calendar split day week month',
             description: 'From the top controls choose Kanban, Calendar or Both. In split view drag the central handle to resize. In Calendar switch between Day/Week/Month, jump to Today, and open tasks from the grid.',
-            order: 0
+            order: 0,
+            archived: false
         },
         {
             id: 4,
@@ -92,7 +96,8 @@ const DevTaskManager = () => {
             priority: 'very_low',
             tags: 'history export import localStorage',
             description: 'Use Undo/Redo to return to a previous state. Export a JSON backup and import it to restore data. Data is auto-saved in the browser. The Deleted column can act as a trash; or delete directly from the modal. Long titles are truncated; descriptions wrap.',
-            order: 0
+            order: 0,
+            archived: false
         }
     ];
 
@@ -129,18 +134,28 @@ const DevTaskManager = () => {
     const [savedSplitRatio, setSavedSplitRatio] = useState(50);
     const [dragMode, setDragMode] = useState<'split' | 'from-kanban' | 'from-calendar' | null>(null);
     const containerRef = useRef(null);
+    
+    // Helper to ensure columns have hideArchived field with backward compatibility
+    const ensureColumnsHaveArchiveField = (cols: any[]) => 
+        cols.map(c => ({ ...c, hideArchived: c.hideArchived !== undefined ? c.hideArchived : true }));
+    
+    // Helper to ensure tasks have archived field with backward compatibility
+    const ensureTasksHaveArchivedField = (tasksList: any[]) =>
+        tasksList.map(t => ({ ...t, archived: t.archived !== undefined ? t.archived : false }));
+    
     const [columnsState, setColumnsState] = useState(() => {
         if (typeof window !== 'undefined') {
             const savedColumns = localStorage.getItem('canban_columns');
             if (savedColumns) {
-                return JSON.parse(savedColumns);
+                const cols = JSON.parse(savedColumns);
+                return ensureColumnsHaveArchiveField(cols);
             }
         }
         return [
-            { id: 'todo', title: 'To do', color: 'bg-slate-100', isDone: false },
-            { id: 'inProgress', title: 'In progress', color: 'bg-blue-50', isDone: false },
-            { id: 'done', title: 'Done', color: 'bg-green-50', isDone: true },
-            { id: 'deleted', title: 'Deleted', color: 'bg-cyan-50', isDone: true }
+            { id: 'todo', title: 'To do', color: 'bg-slate-100', isDone: false, hideArchived: true },
+            { id: 'inProgress', title: 'In progress', color: 'bg-blue-50', isDone: false, hideArchived: true },
+            { id: 'done', title: 'Done', color: 'bg-green-50', isDone: true, hideArchived: true },
+            { id: 'deleted', title: 'Deleted', color: 'bg-cyan-50', isDone: true, hideArchived: true }
         ];
     });
 
@@ -230,7 +245,8 @@ const DevTaskManager = () => {
             id: newId,
             title: 'Nuova Colonna',
             color: 'bg-purple-50',
-            isDone: false
+            isDone: false,
+            hideArchived: true
         };
 
         const currentIndex = columnsState.findIndex(c => c.id === afterColumnId);
@@ -474,9 +490,12 @@ const DevTaskManager = () => {
                         if (!proceed) {
                             return;
                         }
-                        setTasks(data.tasks);
-                        setColumnsState(data.columns);
-                        pushSnapshot(data.tasks, data.columns);
+                        // Ensure tasks and columns have required fields (backward compatibility)
+                        const importedTasks = ensureTasksHaveArchivedField(data.tasks);
+                        const importedColumns = ensureColumnsHaveArchiveField(data.columns);
+                        setTasks(importedTasks);
+                        setColumnsState(importedColumns);
+                        pushSnapshot(importedTasks, importedColumns);
                         if (data.settings) setSettings(data.settings);
                         if (data.viewMode) setViewMode(data.viewMode);
                         if (typeof data.splitRatio === 'number') setSplitRatio(data.splitRatio);
@@ -488,7 +507,8 @@ const DevTaskManager = () => {
                     const result = parseCSVToTasks(content);
                     if (result.tasks && result.tasks.length > 0) {
                         // Determine columns to use: from metadata if available, otherwise current columns
-                        const columnsToUse = result.metadata?.columns || columnsState;
+                        let columnsToUse = result.metadata?.columns || columnsState;
+                        columnsToUse = ensureColumnsHaveArchiveField(columnsToUse);
                         const uniqueColumns = new Set(result.tasks.map(t => t.column));
                         const columnsCount = uniqueColumns.size;
                         
@@ -496,7 +516,6 @@ const DevTaskManager = () => {
                         if (!proceed) {
                             return;
                         }
-                        
                         setTasks(result.tasks);
                         setColumnsState(columnsToUse);
                         pushSnapshot(result.tasks, columnsToUse);

@@ -145,7 +145,9 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     };
 
     const getSortedTasks = (columnId) => {
-        const columnTasks = tasks.filter(t => t.column === columnId);
+        const column = columnsState.find(c => c.id === columnId);
+        let columnTasks = tasks.filter(t => t.column === columnId && (!column?.hideArchived || !t.archived));
+        
         const sortBy = columnSortBy[columnId];
 
         if (sortBy === 'priority') {
@@ -207,7 +209,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                 priority: '',
                 column: column.id,
                 order: maxOrder + 1,
-                scheduled: null
+                scheduled: null,
+                archived: false
             };
             
             // Add task directly through update callback
@@ -233,7 +236,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                 priority: '',
                 tags: '',
                 description: '',
-                order: 0
+                order: 0,
+                archived: false
             };
             onViewTask(newTask);
             setNewTaskColumn(null);
@@ -347,6 +351,12 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                                 Cards as completed
                                             </span>
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onUpdateColumn(column.id, { hideArchived: !column.hideArchived })}>
+                                            {column.hideArchived && <Check className="w-4 h-4" />}
+                                            <span className={column.hideArchived ? 'text-blue-600 font-medium' : ''}>
+                                                Hide archived cards
+                                            </span>
+                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <div className="px-2 py-2">
                                             <div className="text-xs text-gray-600 mb-2">Column color:</div>
@@ -458,6 +468,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     task={task}
                                     onViewTask={onViewTask}
                                     onDeleteTask={onDeleteTask}
+                                    onSave={(updatedTask) => onUpdateTask?.(updatedTask.id, updatedTask)}
                                     onDragStart={handleDragStart}
                                     compact={!!compactColumns?.[column.id]}
                                 />

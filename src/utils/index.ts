@@ -72,6 +72,7 @@ export const convertTasksToCSV = (tasks: any[], columns: any[], settings?: any, 
         'Tags',
         'Description',
         'Order',
+        'Archived',
         'MetaData'
     ];
 
@@ -99,7 +100,8 @@ export const convertTasksToCSV = (tasks: any[], columns: any[], settings?: any, 
             task.priority || '',
             escapeCSVField(task.tags),
             escapeCSVField(task.description),
-            task.order ?? ''
+            task.order ?? '',
+            task.archived ? 'true' : 'false'
         ];
 
         // Add metadata only in the first row
@@ -231,6 +233,7 @@ export const parseCSVToTasks = (csvContent: string) => {
             tags: row.Tags || '',
             description: row.Description || '',
             order: row.Order ? parseInt(row.Order) : 0,
+            archived: row.Archived === 'true' ? true : false,
         };
 
         if (task.title) {

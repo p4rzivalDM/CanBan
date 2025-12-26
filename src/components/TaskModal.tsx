@@ -4,7 +4,7 @@ import { Input } from './ui/input';
 import { MarkdownEditor } from './ui/markdown-editor';
 import { Field, FieldLabel } from './ui/field';
 import TagInput from './ui/tags';
-import { Info, Trash } from 'lucide-react';
+import { Info, Trash, Archive } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { DateTime } from './ui/date-time';
@@ -157,17 +157,40 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete, suggestions,
                     </div>
                     <div className="mt-4 p-4 flex justify-between gap-2 border-t border-gray-200 shrink-0">
                         <div className="flex justify-start gap-2">
-                            <Button
-                                type="button"
-                                variant="destructive"
-                                size="icon"
-                                onClick={() => {
-                                    onDelete(viewingTask.id);
-                                    setViewingTask(null);
-                                }}
-                            >
-                                <Trash />
-                            </Button>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => {
+                                                onSave({ ...editingForm, archived: !editingForm.archived });
+                                                setViewingTask(null);
+                                            }}
+                                        >
+                                            <Archive className="w-4 h-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{editingForm.archived ? 'Restore this task' : 'Archive this task'}</TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="icon"
+                                            onClick={() => {
+                                                onDelete(viewingTask.id);
+                                                setViewingTask(null);
+                                            }}
+                                        >
+                                            <Trash />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Delete this task permanently</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                         <div className="flex justify-end gap-2">
                             <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>

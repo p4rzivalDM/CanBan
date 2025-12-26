@@ -31,6 +31,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 }) => {
     const todayStr = new Date().toISOString().split('T')[0];
 
+    // Helper function to filter archived tasks based on column settings
+    const filterArchivedTasks = (tasksToFilter: any[]) => {
+        return tasksToFilter.filter(task => {
+            const column = columnsState.find(c => c.id === task.column);
+            return column?.hideArchived ? !task.archived : true;
+        });
+    };
+
     // Precompute weekDays when needed and whether the currently shown period contains today
     const weekDaysForView = calendarView === 'week' ? getWeekDays(currentDate) : null;
     let containsToday = false;
@@ -110,7 +118,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     if (calendarView === 'day') {
         const dateStr = currentDate.toISOString().split('T')[0];
         const isToday = dateStr === todayStr;
-        const dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) =>  (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
+        let dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) =>  (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
+        dayTasks = filterArchivedTasks(dayTasks);
+        
         const hours = Array.from({ length: 24 }, (_, i) => i);
 
         return (
@@ -139,7 +149,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                             <div
                                                 key={task.id}
                                                 onClick={() => onViewTask(task)}
-                                                className={`text-xs p-2 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
+                                                className={`text-xs p-2 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''} ${task.archived ? 'opacity-50 line-through' : ''}`}
                                             >
                                                 <div className="font-medium">
                                                     <span className="text-xs mr-1">{task.time} -</span>
@@ -173,7 +183,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                     <div className="grid grid-cols-7 gap-3">
                         {weekDays.map(day => {
                             const dateStr = day.toISOString().split('T')[0];
-                        const dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) => (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
+                            let dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) => (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
+                            dayTasks = filterArchivedTasks(dayTasks);
+                        
                             const isToday = dateStr === todayStr;
                             const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -198,7 +210,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                                                 <div
                                                                     key={task.id}
                                                                     onClick={() => onViewTask(task)}
-                                                                    className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
+                                                                    className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''} ${task.archived ? 'opacity-50 line-through' : ''}`}
                                                                 >
                                                                     <div className="font-medium text-xs">
                                                                         <span className="mr-1">{task.time} -</span>
@@ -233,7 +245,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) => (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
+    let dayTasks = tasks.filter(t => t?.scheduled?.split('T')[0] === dateStr).sort((a, b) => (a?.scheduled?.split('T')[1]).localeCompare(b.scheduled?.split('T')[1]));
+    dayTasks = filterArchivedTasks(dayTasks);
+    
         const isToday = dateStr === todayStr;
 
         days.push(
@@ -249,7 +263,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                             <div
                                 key={task.id}
                                 onClick={() => onViewTask(task)}
-                                className={`text-xs p-1.5 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''}`}
+                                className={`text-xs p-1.5 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''} ${task.archived ? 'opacity-50 line-through' : ''}`}
                             >
                                 <div className="font-medium text-xs">{task.time}</div>
                                 <div className="font-medium truncate">{truncateText(task.title, 60)}</div>

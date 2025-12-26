@@ -1,14 +1,16 @@
 import React from 'react';
-import { X, GripVertical, Calendar, AlertCircle, Flame, AlertTriangle, CircleDot, ArrowDown, Minus } from 'lucide-react';
+import { X, GripVertical, Calendar, AlertCircle, Flame, AlertTriangle, CircleDot, ArrowDown, Minus, Archive, Trash2 } from 'lucide-react';
 import { truncateText, priorityColors, availablePriorities } from '../utils';
 import { format } from "date-fns";
 import MDEditor from '@uiw/react-md-editor';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { Button } from './ui/button';
 
 interface KanbanCardProps {
     task: any;
     onViewTask: (task: any) => void;
     onDeleteTask: (taskId: string) => void;
+    onSave: (task: any) => void;
     onDragStart: (task: any) => void;
     compact?: boolean;
 }
@@ -17,6 +19,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     task,
     onViewTask,
     onDeleteTask,
+    onSave,
     onDragStart,
     compact = false
 }) => {
@@ -57,7 +60,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         <div
             draggable
             onDragStart={() => onDragStart(task)}
-            className={`bg-white rounded-lg ${compact ? 'p-2' : 'p-3'} shadow-sm hover:shadow-md transition-shadow cursor-pointer ${priorityColors(task.priority)}`}
+            className={`bg-white rounded-lg ${compact ? 'p-2' : 'p-3'} shadow-sm hover:shadow-md transition-shadow cursor-pointer ${priorityColors(task.priority)} ${task.archived ? 'opacity-50 line-through' : ''}`}
             onClick={() => onViewTask(task)}
         >
             <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2'} ${compact ? '-mt-0.5' : '-mt-1'}`}>
@@ -74,20 +77,40 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
                         <p className="text-sm mt-1 font-semibold text-gray-900 wrap-break-word w-7/8">{truncateText(task.title, compact ? 35 : 45)}</p>
                     </div>
                 </div>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <span>
-                            <X
-                                className="w-4 h-4 text-gray-400 hover:text-red-500 transition-colors ml-2 shrink-0 cursor-pointer"
+                <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSave({ ...task, archived: !task.archived });
+                                }}
+                            >
+                                <Archive className="w-4 h-4 text-gray-400 hover:text-orange-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{task.archived ? 'Restore task' : 'Archive task'}</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onDeleteTask(task.id);
                                 }}
-                            />
-                        </span>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete task</TooltipContent>
-                </Tooltip>
+                            >
+                                <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-500" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete task</TooltipContent>
+                    </Tooltip>
+                </div>
             </div>
             {(!compact && task.description) && (
                 <div className="mb-2 w-full overflow-hidden" data-color-mode="light">
