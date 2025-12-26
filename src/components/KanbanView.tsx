@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, MoreVertical, GripVertical, ChevronLeftSquare, ChevronRightSquare, Check } from 'lucide-react';
+import { Plus, X, MoreVertical, GripVertical, ChevronLeftSquare, ChevronRightSquare, Check, ChevronDown } from 'lucide-react';
 import KanbanCard from './KanbanCard';
 import { availableColors } from '../utils';
 import { Button } from './ui/button';
@@ -57,6 +57,14 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         return {};
     });
 
+    const [collapsedColumns, setCollapsedColumns] = useState<Record<string, boolean>>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('canban_collapsed_columns');
+            return saved ? JSON.parse(saved) : {};
+        }
+        return {};
+    });
+
     // Salvataggio automatico delle preferenze colonne
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -69,6 +77,12 @@ const KanbanView: React.FC<KanbanViewProps> = ({
             localStorage.setItem('canban_compact_columns', JSON.stringify(compactColumns));
         }
     }, [compactColumns]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('canban_collapsed_columns', JSON.stringify(collapsedColumns));
+        }
+    }, [collapsedColumns]);
 
     const handleDragStart = (task) => {
         setDraggedTask(task);
@@ -165,6 +179,13 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         });
     };
 
+    const toggleCollapseColumn = (columnId) => {
+        setCollapsedColumns({
+            ...collapsedColumns,
+            [columnId]: !collapsedColumns[columnId]
+        });
+    };
+
     const toggleCompactView = (columnId: string) => {
         setCompactColumns(prev => ({ ...prev, [columnId]: !prev[columnId] }));
     };
@@ -257,16 +278,24 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                         handleDrop(column.id);
                         handleColumnDrop(column);
                     }}
-                    className={`flex-1 min-w-[280px] ${column.color} rounded-lg p-4 relative flex flex-col max-h-full`}
+                    className={`${
+                        collapsedColumns[column.id] 
+                            ? 'min-w-[60px] max-w-[60px] flex flex-col items-center justify-start py-5 px-3' 
+                            : 'flex-1 min-w-[280px] p-4 flex flex-col max-h-full'
+                    } ${column.color} rounded-lg relative`}
                 >
                     <div
                         draggable
                         onDragStart={(e) => {
                             handleColumnDragStart(column);
                         }}
-                        className="cursor-move mb-4 shrink-0"
+                        className={`${
+                            collapsedColumns[column.id]
+                                ? 'cursor-move flex flex-col items-center gap-4 shrink-0 w-full'
+                                : 'cursor-move mb-4 shrink-0'
+                        }`}
                     >
-                        <div className="flex items-center justify-between">
+                        <div className={collapsedColumns[column.id] ? 'flex flex-col items-center gap-4 w-full' : 'flex items-center justify-between w-full'}>
                             {editingColumn === column.id ? (
                                 <Input
                                     type="text"
@@ -285,119 +314,142 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     }}
                                 />
                             ) : (
-                                <div className="flex items-center gap-2 flex-1">
+                                <div className={collapsedColumns[column.id] ? 'flex flex-col items-center gap-2 w-full' : 'flex items-center gap-2 flex-1'}>
+                                    {!collapsedColumns[column.id] && (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <span>
+                                                    <GripVertical className="w-5 h-5 text-gray-400" />
+                                                </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Drag to reorder column</TooltipContent>
+                                        </Tooltip>
+                                    )}
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <span>
-                                                <GripVertical className="w-5 h-5 text-gray-400" />
-                                            </span>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className={collapsedColumns[column.id] ? 'p-0 h-6 w-6' : 'p-1 h-auto'}
+                                                onClick={() => toggleCollapseColumn(column.id)}
+                                            >
+                                                <ChevronDown className="w-4 h-4 text-gray-600" />
+                                            </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent>Drag to reorder column</TooltipContent>
+                                        <TooltipContent>
+                                            {collapsedColumns[column.id] ? 'Expand column' : 'Collapse column'}
+                                        </TooltipContent>
                                     </Tooltip>
                                     <h3
-                                        className="font-bold text-gray-800 text-lg cursor-pointer hover:text-blue-600"
-                                        onClick={() => setEditingColumn(column.id)}
+                                        className={`font-bold text-gray-800 text-lg cursor-pointer ${
+                                            collapsedColumns[column.id]
+                                                ? '-rotate-90 whitespace-nowrap origin-center shrink-0 h-8 flex items-center mt-6'
+                                                : 'hover:text-blue-600'
+                                        }`}
+                                        onClick={() => !collapsedColumns[column.id] && setEditingColumn(column.id)}
                                     >
                                         {column.title}
                                     </h3>
-                                    {column.isDone && (
+                                    {column.isDone && !collapsedColumns[column.id] && (
                                         <Check className="w-5 h-5 text-green-600" />
                                     )}
                                 </div>
                             )}
-                            <div className="flex gap-1">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            onClick={() => setNewTaskColumn(column.id)}
-                                            size="icon"
-                                            variant="ghost"
-                                        >
-                                            <Plus />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Quick add task</TooltipContent>
-                                </Tooltip>
-                                <DropdownMenu>
+                            {!collapsedColumns[column.id] && (
+                                <div className="flex gap-1">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                >
-                                                    <MoreVertical />
-                                                </Button>
-                                            </DropdownMenuTrigger>
+                                            <Button
+                                                onClick={() => setNewTaskColumn(column.id)}
+                                                size="icon"
+                                                variant="ghost"
+                                            >
+                                                <Plus />
+                                            </Button>
                                         </TooltipTrigger>
-                                        <TooltipContent>Column options</TooltipContent>
+                                        <TooltipContent>Quick add task</TooltipContent>
                                     </Tooltip>
-                                    <DropdownMenuContent align="end" className="w-[200px]">
-                                        <DropdownMenuItem onClick={() => toggleCompactView(column.id)}>
-                                            {compactColumns?.[column.id] && <Check className="w-4 h-4" />}
-                                            <span className={compactColumns?.[column.id] ? 'text-blue-600 font-medium' : ''}>
-                                                Compact view
-                                            </span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => toggleColumnSort(column.id)}>
-                                            {columnSortBy[column.id] === 'priority' && <Check className="w-4 h-4" />}
-                                            <span className={columnSortBy[column.id] === 'priority' ? 'text-blue-600 font-medium' : ''}>
-                                                Sort by priority
-                                            </span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onUpdateColumn(column.id, { isDone: !column.isDone })}>
-                                            {column.isDone && <Check className="w-4 h-4" />}
-                                            <span className={column.isDone ? 'text-blue-600 font-medium' : ''}>
-                                                Cards as completed
-                                            </span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onUpdateColumn(column.id, { hideArchived: !column.hideArchived })}>
-                                            {column.hideArchived && <Check className="w-4 h-4" />}
-                                            <span className={column.hideArchived ? 'text-blue-600 font-medium' : ''}>
-                                                Hide archived cards
-                                            </span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <div className="px-2 py-2">
-                                            <div className="text-xs text-gray-600 mb-2">Column color:</div>
-                                            <div className="grid grid-cols-5 gap-1">
-                                                {availableColors.map(color => (
-                                                    <button
-                                                        key={color}
-                                                        onClick={() => onUpdateColumn(column.id, { color })}
-                                                        className={`w-6 h-6 rounded ${color} border-2 ${column.color === color ? 'border-blue-600' : 'border-gray-300'}`}
-                                                    />
-                                                ))}
+                                    <DropdownMenu>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                    >
+                                                        <MoreVertical />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Column options</TooltipContent>
+                                        </Tooltip>
+                                        <DropdownMenuContent align="end" className="w-[200px]">
+                                            <DropdownMenuItem onClick={() => toggleCompactView(column.id)}>
+                                                {compactColumns?.[column.id] && <Check className="w-4 h-4" />}
+                                                <span className={compactColumns?.[column.id] ? 'text-blue-600 font-medium' : ''}>
+                                                    Compact view
+                                                </span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => toggleColumnSort(column.id)}>
+                                                {columnSortBy[column.id] === 'priority' && <Check className="w-4 h-4" />}
+                                                <span className={columnSortBy[column.id] === 'priority' ? 'text-blue-600 font-medium' : ''}>
+                                                    Sort by priority
+                                                </span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => onUpdateColumn(column.id, { isDone: !column.isDone })}>
+                                                {column.isDone && <Check className="w-4 h-4" />}
+                                                <span className={column.isDone ? 'text-blue-600 font-medium' : ''}>
+                                                    Cards as completed
+                                                </span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => onUpdateColumn(column.id, { hideArchived: !column.hideArchived })}>
+                                                {column.hideArchived && <Check className="w-4 h-4" />}
+                                                <span className={column.hideArchived ? 'text-blue-600 font-medium' : ''}>
+                                                    Hide archived cards
+                                                </span>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <div className="px-2 py-2">
+                                                <div className="text-xs text-gray-600 mb-2">Column color:</div>
+                                                <div className="grid grid-cols-5 gap-1">
+                                                    {availableColors.map(color => (
+                                                        <button
+                                                            key={color}
+                                                            onClick={() => onUpdateColumn(column.id, { color })}
+                                                            className={`w-6 h-6 rounded ${color} border-2 ${column.color === color ? 'border-blue-600' : 'border-gray-300'}`}
+                                                        />
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => onAddColumnAtPosition(column.id, 'left')}>
-                                            <ChevronLeftSquare />
-                                            Add on left
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onAddColumnAtPosition(column.id, 'right')}>
-                                            <ChevronRightSquare />
-                                            Add on right
-                                        </DropdownMenuItem>
-                                        {columnsState.length > 1 && (
-                                            <>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem 
-                                                    onClick={() => onDeleteColumn(column.id)}
-                                                    className="text-red-600"
-                                                >
-                                                    <X />
-                                                    Delete column
-                                                </DropdownMenuItem>
-                                            </>
-                                        )}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem onClick={() => onAddColumnAtPosition(column.id, 'left')}>
+                                                <ChevronLeftSquare />
+                                                Add on left
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => onAddColumnAtPosition(column.id, 'right')}>
+                                                <ChevronRightSquare />
+                                                Add on right
+                                            </DropdownMenuItem>
+                                            {columnsState.length > 1 && (
+                                                <>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem 
+                                                        onClick={() => onDeleteColumn(column.id)}
+                                                        className="text-red-600"
+                                                    >
+                                                        <X />
+                                                        Delete column
+                                                    </DropdownMenuItem>
+                                                </>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    {newTaskColumn === column.id && (
+                    {!collapsedColumns[column.id] && newTaskColumn === column.id && (
                         <div className="bg-white rounded-lg p-3 mb-3 shadow-sm">
                             <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
                             <Input
@@ -449,35 +501,36 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                         </div>
                     )}
 
-                    <div className="space-y-3 overflow-y-auto flex-1 min-h-0">
-                        {getSortedTasks(column.id).map((task) => (
+                    {!collapsedColumns[column.id] && (
+                        <div className="space-y-3 overflow-y-auto flex-1 min-h-0">
+                            {getSortedTasks(column.id).map((task) => (
+                                <div
+                                    key={task.id}
+                                    onDragOver={(e) => {
+                                        // allow dropping on single card to define position
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleDropOnTask(e, task);
+                                    }}
+                                >
+                                    <KanbanCard
+                                        task={task}
+                                        onViewTask={onViewTask}
+                                        onDeleteTask={onDeleteTask}
+                                        onSave={(updatedTask) => onUpdateTask?.(updatedTask.id, updatedTask)}
+                                        onDragStart={handleDragStart}
+                                        compact={!!compactColumns?.[column.id]}
+                                    />
+                                </div>
+                            ))}
+                            {/* Bottom drop zone to append at end when not priority-sorted */}
                             <div
-                                key={task.id}
+                                className="h-6"
                                 onDragOver={(e) => {
-                                    // allow dropping on single card to define position
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                                onDrop={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDropOnTask(e, task);
-                                }}
-                            >
-                                <KanbanCard
-                                    task={task}
-                                    onViewTask={onViewTask}
-                                    onDeleteTask={onDeleteTask}
-                                    onSave={(updatedTask) => onUpdateTask?.(updatedTask.id, updatedTask)}
-                                    onDragStart={handleDragStart}
-                                    compact={!!compactColumns?.[column.id]}
-                                />
-                            </div>
-                        ))}
-                        {/* Bottom drop zone to append at end when not priority-sorted */}
-                        <div
-                            className="h-6"
-                            onDragOver={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                             }}
@@ -501,7 +554,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                 setDraggedTask(null);
                             }}
                         />
-                    </div>
+                        </div>
+                    )}
                 </div>
             ))}
         </div>

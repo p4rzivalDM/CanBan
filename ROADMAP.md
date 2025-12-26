@@ -5,7 +5,6 @@
 ### Features
 Planned:
 - [ ] Hamburger menu for project switching and other functionality
-- [ ] Archive cards functionality (instead of deleting, cards can be archived; each column has a "hide archived cards" option enabled by default; when disabled, archived cards are visible with a visual indicator)
 - [ ] Folder/project view switcher (each folder has its own cards and calendar, switchable without exiting)
 - [ ] Click day in Month view to open Day view
 - [ ] Dynamic tab icon color
@@ -14,9 +13,7 @@ Planned:
 - [ ] "Estimated time" field
 - [ ] Tabular tasks view
 - [ ] Drag cards in month/week/day to reschedule
-- [ ] Cards as deleted - hide deleted cards from calendar views (like completed)
 - [ ] Google Drive connection feature for automatic backup
-- [ ] Collapsible Kanban columns (show only column name and expand button, hide cards to save space)
 - [ ] Auto-save creation date when cards are created
 - [ ] Auto-add completion date when cards are moved to "completed" columns; auto-remove when moved out
 - [ ] Duration estimate field (optional, alongside scheduled field)
@@ -24,9 +21,12 @@ Planned:
 - [ ] Auto-priority setting based on due date (optional setting that automatically adjusts priority based on deadline proximity; updates on reload/save/edit)
 
 Implemented:
+- [x] Collapsible Kanban columns (show only column name and expand button, hide cards to save space)
+- [x] Archive cards functionality (instead of deleting, cards can be archived; each column has a "hide archived cards" option enabled by default; when disabled, archived cards are visible with a visual indicator)
 - [x] Make priority field optional
 - [x] CSV export / import
 - [x] Split / single view transitions
+- [x] Cards as deleted - hide deleted cards from calendar views (like completed)
 - [x] Auto mode switching via divider drag
 - [x] Settings modal (divider limits)
 - [x] JSON export / import (settings persistence)
