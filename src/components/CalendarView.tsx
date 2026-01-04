@@ -34,6 +34,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     // Helper function to filter archived tasks based on column settings
     const filterArchivedTasks = (tasksToFilter: any[]) => {
         return tasksToFilter.filter(task => {
+            if (!task) return false;
             const column = columnsState.find(c => c.id === task.column);
             return column?.hideArchived ? !task.archived : true;
         });

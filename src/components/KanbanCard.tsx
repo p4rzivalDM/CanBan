@@ -13,6 +13,7 @@ interface KanbanCardProps {
     onSave: (task: any) => void;
     onDragStart: (task: any) => void;
     compact?: boolean;
+    isCompleted?: boolean;
 }
 
 const KanbanCard: React.FC<KanbanCardProps> = ({
@@ -21,7 +22,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
     onDeleteTask,
     onSave,
     onDragStart,
-    compact = false
+    compact = false,
+    isCompleted = false
 }) => {
     // Local normalizeTags since KanbanView no longer passes it
     const normalizeTags = (tags: any) => {
@@ -60,7 +62,7 @@ const KanbanCard: React.FC<KanbanCardProps> = ({
         <div
             draggable
             onDragStart={() => onDragStart(task)}
-            className={`bg-white rounded-lg ${compact ? 'p-2' : 'p-3'} shadow-sm hover:shadow-md transition-shadow cursor-pointer ${priorityColors(task.priority)} ${task.archived ? 'opacity-50 line-through' : ''}`}
+            className={`bg-white rounded-lg ${compact ? 'p-2' : 'p-3'} shadow-sm hover:shadow-md transition-shadow cursor-pointer ${priorityColors(task.priority)} ${task.archived ? 'opacity-50' : ''} ${isCompleted ? 'line-through' : ''}`}
             onClick={() => onViewTask(task)}
         >
             <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-2'} ${compact ? '-mt-0.5' : '-mt-1'}`}>

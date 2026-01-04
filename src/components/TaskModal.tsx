@@ -10,10 +10,10 @@ import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { DateTime } from './ui/date-time';
 
 const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete, suggestions, allTasks }) => {
-    const [editingForm, setEditingForm] = useState(viewingTask || null);
+    const [editingForm, setEditingForm] = useState(viewingTask ? { ...viewingTask, archived: viewingTask.archived ?? false } : null);
 
     useEffect(() => {
-        setEditingForm(viewingTask ? { ...viewingTask } : null);
+        setEditingForm(viewingTask ? { ...viewingTask, archived: viewingTask.archived ?? false } : null);
     }, [viewingTask]);
 
     if (!viewingTask) return null;
@@ -165,14 +165,14 @@ const TaskModal = ({ viewingTask, setViewingTask, onSave, onDelete, suggestions,
                                             variant="outline"
                                             size="icon"
                                             onClick={() => {
-                                                onSave({ ...editingForm, archived: !editingForm.archived });
+                                                onSave({ ...editingForm, archived: !(editingForm?.archived ?? false) });
                                                 setViewingTask(null);
                                             }}
                                         >
                                             <Archive className="w-4 h-4" />
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>{editingForm.archived ? 'Restore this task' : 'Archive this task'}</TooltipContent>
+                                    <TooltipContent>{editingForm?.archived ? 'Restore this task' : 'Archive this task'}</TooltipContent>
                                 </Tooltip>
                                 <Tooltip>
                                     <TooltipTrigger asChild>

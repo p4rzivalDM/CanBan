@@ -160,7 +160,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
 
     const getSortedTasks = (columnId) => {
         const column = columnsState.find(c => c.id === columnId);
-        let columnTasks = tasks.filter(t => t.column === columnId && (!column?.hideArchived || !t.archived));
+        let columnTasks = tasks.filter(t => t && t.column === columnId && (!column?.hideArchived || !t.archived));
 
         const sortBy = columnSortBy[columnId];
 
@@ -517,6 +517,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                         onSave={(updatedTask) => onUpdateTask?.(updatedTask.id, updatedTask)}
                                         onDragStart={handleDragStart}
                                         compact={!!compactColumns?.[column.id]}
+                                        isCompleted={column.isDone}
                                     />
                                 </div>
                             ))}
