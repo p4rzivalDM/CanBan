@@ -150,7 +150,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                             <div
                                                 key={task.id}
                                                 onClick={() => onViewTask(task)}
-                                                className={`text-xs p-2 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''} ${task.archived ? 'opacity-50 line-through' : ''}`}
+                                                className={`text-xs p-2 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${task.archived ? 'opacity-50' : ''} ${isDone ? 'line-through' : ''}`}
                                             >
                                                 <div className="font-medium">
                                                     <span className="text-xs mr-1">{task.time} -</span>
@@ -211,7 +211,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                                                 <div
                                                                     key={task.id}
                                                                     onClick={() => onViewTask(task)}
-                                                                    className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''} ${task.archived ? 'opacity-50 line-through' : ''}`}
+                                                                    className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${task.archived ? 'opacity-50' : ''} ${isDone ? 'line-through' : ''}`}
                                                                 >
                                                                     <div className="font-medium text-xs">
                                                                         <span className="mr-1">{task.time} -</span>
@@ -264,7 +264,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                             <div
                                 key={task.id}
                                 onClick={() => onViewTask(task)}
-                                className={`text-xs p-1.5 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${isDone ? 'opacity-40' : ''} ${task.archived ? 'opacity-50 line-through' : ''}`}
+                                className={`text-xs p-1.5 rounded cursor-pointer hover:opacity-80 ${priorityColors(task.priority)} bg-white shadow-sm ${task.archived ? 'opacity-50' : ''} ${isDone ? 'line-through' : ''}`}
                             >
                                 <div className="font-medium text-xs">{task.time}</div>
                                 <div className="font-medium truncate">{truncateText(task.title, 60)}</div>
