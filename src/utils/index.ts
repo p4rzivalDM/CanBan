@@ -45,9 +45,14 @@ export const priorityColors = (priority: string) => {
 };
 
 export const availableColors = [
-    'bg-slate-100', 'bg-blue-50', 'bg-green-50', 'bg-purple-50',
-    'bg-pink-50', 'bg-yellow-50', 'bg-red-50', 'bg-orange-50',
-    'bg-indigo-50', 'bg-cyan-50'
+    'bg-red-400', 'bg-red-300', 'bg-red-200', 'bg-red-100', 'bg-red-50',
+    'bg-yellow-400', 'bg-yellow-300', 'bg-yellow-200', 'bg-yellow-100', 'bg-yellow-50',
+    'bg-lime-400', 'bg-lime-300', 'bg-lime-200', 'bg-lime-100', 'bg-lime-50',
+    'bg-sky-400', 'bg-sky-300', 'bg-sky-200', 'bg-sky-100', 'bg-sky-50',
+    'bg-indigo-400', 'bg-indigo-300', 'bg-indigo-200', 'bg-indigo-100', 'bg-indigo-50',
+    'bg-purple-400', 'bg-purple-300', 'bg-purple-200', 'bg-purple-100', 'bg-purple-50',
+    'bg-pink-400', 'bg-pink-300', 'bg-pink-200', 'bg-pink-100', 'bg-pink-50',
+    'bg-slate-400', 'bg-slate-300', 'bg-slate-200', 'bg-slate-100', 'bg-slate-50',
 ];
 
 export const availablePriorities = (priority: string) => {
