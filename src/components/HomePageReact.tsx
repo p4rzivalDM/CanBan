@@ -134,15 +134,15 @@ const DevTaskManager = () => {
     const [savedSplitRatio, setSavedSplitRatio] = useState(50);
     const [dragMode, setDragMode] = useState<'split' | 'from-kanban' | 'from-calendar' | null>(null);
     const containerRef = useRef(null);
-    
+
     // Helper to ensure columns have hideArchived field with backward compatibility
-    const ensureColumnsHaveArchiveField = (cols: any[]) => 
+    const ensureColumnsHaveArchiveField = (cols: any[]) =>
         cols.map(c => ({ ...c, hideArchived: c.hideArchived !== undefined ? c.hideArchived : true }));
-    
+
     // Helper to ensure tasks have archived field with backward compatibility
     const ensureTasksHaveArchivedField = (tasksList: any[]) =>
         tasksList.map(t => ({ ...t, archived: t.archived !== undefined ? t.archived : false }));
-    
+
     const [columnsState, setColumnsState] = useState(() => {
         if (typeof window !== 'undefined') {
             const savedColumns = localStorage.getItem('canban_columns');
@@ -212,7 +212,7 @@ const DevTaskManager = () => {
     const updateTask = (taskId, updates) => {
         const existingTask = tasks.find(t => t.id === taskId);
         let newTasks;
-        
+
         if (existingTask) {
             // Update existing task
             newTasks = tasks.map(t => t.id === taskId ? { ...t, ...updates } : t);
@@ -220,7 +220,7 @@ const DevTaskManager = () => {
             // Add new task
             newTasks = [...tasks, { id: taskId, ...updates }];
         }
-        
+
         setTasks(newTasks);
         pushSnapshot(newTasks, columnsState);
     };
@@ -451,7 +451,7 @@ const DevTaskManager = () => {
         } else if (viewMode === 'kanban') {
             exportSplitRatio = 100;
         }
-        
+
         const dataToExport = {
             tasks,
             columns: columnsState,
@@ -511,7 +511,7 @@ const DevTaskManager = () => {
                         columnsToUse = ensureColumnsHaveArchiveField(columnsToUse);
                         const uniqueColumns = new Set(result.tasks.map(t => t.column));
                         const columnsCount = uniqueColumns.size;
-                        
+
                         const proceed = confirm(buildImportConfirmMessage(result.tasks.length, columnsCount, 'CSV'));
                         if (!proceed) {
                             return;
@@ -519,14 +519,14 @@ const DevTaskManager = () => {
                         setTasks(result.tasks);
                         setColumnsState(columnsToUse);
                         pushSnapshot(result.tasks, columnsToUse);
-                        
+
                         // Restore settings, viewMode and splitRatio if available in metadata
                         if (result.metadata) {
                             if (result.metadata.settings) setSettings(result.metadata.settings);
                             if (result.metadata.viewMode) setViewMode(result.metadata.viewMode);
                             if (typeof result.metadata.splitRatio === 'number') setSplitRatio(result.metadata.splitRatio);
                         }
-                        
+
                         toast.success(`Imported ${result.tasks.length} tasks and ${columnsCount} columns from CSV`);
                     } else {
                         toast.error('No valid tasks found in CSV file.');
@@ -656,8 +656,8 @@ const DevTaskManager = () => {
                         viewMode={viewMode}
                         previewMode={isDragging ? (
                             splitRatio <= DIVIDER_LEFT_LIMIT ? 'calendar' :
-                            splitRatio >= DIVIDER_RIGHT_LIMIT ? 'kanban' :
-                            'both'
+                                splitRatio >= DIVIDER_RIGHT_LIMIT ? 'kanban' :
+                                    'both'
                         ) : null}
                         setViewMode={setViewMode}
                         exportToJSON={exportToJSON}
@@ -682,6 +682,7 @@ const DevTaskManager = () => {
 
                                 {/* Divider hover per tornare a split view */}
                                 <SplitDivider
+                                    viewMode={viewMode}
                                     isDragging={isDragging && dragMode === 'from-kanban'}
                                     splitRatio={splitRatio}
                                     onMouseDown={handleMouseDown}
@@ -715,6 +716,7 @@ const DevTaskManager = () => {
 
                                 {/* Divider hover per tornare a split view */}
                                 <SplitDivider
+                                    viewMode={viewMode}
                                     isDragging={isDragging && dragMode === 'from-calendar'}
                                     splitRatio={splitRatio}
                                     onMouseDown={handleMouseDown}
@@ -741,6 +743,7 @@ const DevTaskManager = () => {
                                 </div>
 
                                 <SplitDivider
+                                    viewMode={viewMode}
                                     isDragging={isDragging}
                                     isSnapAnimating={isSnapAnimating}
                                     splitRatio={splitRatio}

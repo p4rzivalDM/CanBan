@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, MoreVertical, GripVertical, ChevronLeftSquare, ChevronRightSquare, Check, ChevronDown } from 'lucide-react';
+import { Plus, X, MoreVertical, GripVertical, ChevronLeftSquare, ChevronRightSquare, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import KanbanCard from './KanbanCard';
 import { availableColors } from '../utils';
 import { Button } from './ui/button';
@@ -48,7 +48,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         }
         return {};
     });
-    
+
     const [compactColumns, setCompactColumns] = useState<Record<string, boolean>>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('canban_compact_columns');
@@ -96,7 +96,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         if (draggedTask && draggedTask.column !== columnId) {
             const tasksInColumn = tasks.filter(t => t.column === columnId);
             const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
-            
+
             // Update task through parent callback if available, otherwise just view it
             if (onUpdateTask) {
                 onUpdateTask(draggedTask.id, { column: columnId, order: maxOrder + 1 });
@@ -161,7 +161,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
     const getSortedTasks = (columnId) => {
         const column = columnsState.find(c => c.id === columnId);
         let columnTasks = tasks.filter(t => t.column === columnId && (!column?.hideArchived || !t.archived));
-        
+
         const sortBy = columnSortBy[columnId];
 
         if (sortBy === 'priority') {
@@ -215,7 +215,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         if (onReorderColumns) {
             onReorderColumns(newColumns);
         }
-        
+
         setDraggedColumn(null);
     };
 
@@ -223,7 +223,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         if (newTaskForm.title.trim()) {
             const tasksInColumn = tasks.filter(t => t.column === column.id);
             const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
-            
+
             const newTask = {
                 id: Date.now().toString(),
                 title: newTaskForm.title,
@@ -233,12 +233,12 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                 scheduled: null,
                 archived: false
             };
-            
+
             // Add task directly through update callback
             if (onUpdateTask) {
                 onUpdateTask(newTask.id, newTask);
             }
-            
+
             setNewTaskColumn(null);
             setNewTaskForm({ title: '' });
         }
@@ -266,7 +266,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
         }
     };
     return (
-        <div className="flex flex-wrap gap-4 h-full">
+        <div className="ml-2 flex flex-wrap gap-4 h-full">
             {columnsState.map(column => (
                 <div
                     key={column.id}
@@ -278,24 +278,18 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                         handleDrop(column.id);
                         handleColumnDrop(column);
                     }}
-                    className={`${
-                        collapsedColumns[column.id] 
-                            ? 'min-w-[60px] max-w-[60px] flex flex-col items-center justify-start py-5 px-3' 
-                            : 'flex-1 min-w-[280px] p-4 flex flex-col max-h-full'
-                    } ${column.color} rounded-lg relative`}
+                    className={`p-4 ${collapsedColumns[column.id]
+                            ? 'w-10 flex flex-col items-center justify-start'
+                            : 'flex-1 min-w-[280px] flex flex-col max-h-full'
+                        } ${column.color} rounded-lg relative`}
                 >
                     <div
-                        draggable
+                        draggable={collapsedColumns[column.id] ? false : true}
                         onDragStart={(e) => {
                             handleColumnDragStart(column);
                         }}
-                        className={`${
-                            collapsedColumns[column.id]
-                                ? 'cursor-move flex flex-col items-center gap-4 shrink-0 w-full'
-                                : 'cursor-move mb-4 shrink-0'
-                        }`}
                     >
-                        <div className={collapsedColumns[column.id] ? 'flex flex-col items-center gap-4 w-full' : 'flex items-center justify-between w-full'}>
+                        <div className="flex items-center justify-between w-full">
                             {editingColumn === column.id ? (
                                 <Input
                                     type="text"
@@ -314,26 +308,26 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     }}
                                 />
                             ) : (
-                                <div className={collapsedColumns[column.id] ? 'flex flex-col items-center gap-2 w-full' : 'flex items-center gap-2 flex-1'}>
-                                    {!collapsedColumns[column.id] && (
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <span>
-                                                    <GripVertical className="w-5 h-5 text-gray-400" />
-                                                </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Drag to reorder column</TooltipContent>
-                                        </Tooltip>
-                                    )}
+                                <div className={collapsedColumns[column.id] ? 'mt-2 flex flex-col items-center gap-0' : 'group flex items-center gap-0 flex-1'}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <GripVertical className="w-5 h-5 text-gray-400 cursor-move" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>Drag to reorder column</TooltipContent>
+                                    </Tooltip>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className={collapsedColumns[column.id] ? 'p-0 h-6 w-6' : 'p-1 h-auto'}
+                                                className="p-1 h-auto"
                                                 onClick={() => toggleCollapseColumn(column.id)}
                                             >
-                                                <ChevronDown className="w-4 h-4 text-gray-600" />
+                                                {!collapsedColumns[column.id] ? (
+                                                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                                                ) : (
+                                                    <ChevronDown className="mt-3 w-4 h-4 text-gray-600" />
+                                                )}
                                             </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
@@ -341,17 +335,16 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                         </TooltipContent>
                                     </Tooltip>
                                     <h3
-                                        className={`font-bold text-gray-800 text-lg cursor-pointer ${
-                                            collapsedColumns[column.id]
-                                                ? '-rotate-90 whitespace-nowrap origin-center shrink-0 h-8 flex items-center mt-6'
+                                        className={`font-bold text-gray-800 text-lg cursor-pointer ${collapsedColumns[column.id]
+                                                ? 'rotate-90 whitespace-nowrap origin-left mt-0 ml-50 w-50 overflow-hidden'
                                                 : 'hover:text-blue-600'
-                                        }`}
+                                            }`}
                                         onClick={() => !collapsedColumns[column.id] && setEditingColumn(column.id)}
                                     >
                                         {column.title}
                                     </h3>
                                     {column.isDone && !collapsedColumns[column.id] && (
-                                        <Check className="w-5 h-5 text-green-600" />
+                                        <Check className="ml-3 w-5 h-5 text-green-600" />
                                     )}
                                 </div>
                             )}
@@ -433,7 +426,7 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                             {columnsState.length > 1 && (
                                                 <>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem 
+                                                    <DropdownMenuItem
                                                         onClick={() => onDeleteColumn(column.id)}
                                                         className="text-red-600"
                                                     >
@@ -501,8 +494,8 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                         </div>
                     )}
 
-                    {!collapsedColumns[column.id] && (
-                        <div className="space-y-3 overflow-y-auto flex-1 min-h-0">
+                    {(!collapsedColumns[column.id] && getSortedTasks(column.id).length > 0) && (
+                        <div className="space-y-3 py-3 overflow-y-auto flex-1">
                             {getSortedTasks(column.id).map((task) => (
                                 <div
                                     key={task.id}
@@ -527,33 +520,6 @@ const KanbanView: React.FC<KanbanViewProps> = ({
                                     />
                                 </div>
                             ))}
-                            {/* Bottom drop zone to append at end when not priority-sorted */}
-                            <div
-                                className="h-6"
-                                onDragOver={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                            }}
-                            onDrop={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (!draggedTask || !onUpdateTask) return;
-                                const colId = column.id;
-                                if (columnSortBy[colId] === 'priority') {
-                                    // append only if moving across columns
-                                    if (draggedTask.column !== colId) {
-                                        const tasksInColumn = tasks.filter(t => t.column === colId);
-                                        const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
-                                        onUpdateTask(draggedTask.id, { column: colId, order: maxOrder + 1 });
-                                    }
-                                } else {
-                                    const tasksInColumn = tasks.filter(t => t.column === colId);
-                                    const maxOrder = tasksInColumn.length > 0 ? Math.max(...tasksInColumn.map(t => t.order)) : -1;
-                                    onUpdateTask(draggedTask.id, { column: colId, order: maxOrder + 1 });
-                                }
-                                setDraggedTask(null);
-                            }}
-                        />
                         </div>
                     )}
                 </div>

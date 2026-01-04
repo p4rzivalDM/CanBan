@@ -277,7 +277,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
 
     return (
-        <div className="h-full flex flex-col">
+        <div className="mr-2 h-full flex flex-col">
             <HeaderBar
                 title={currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 onPrev={() => onChangeMonth(-1)}
